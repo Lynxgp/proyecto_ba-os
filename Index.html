@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<!--
+  Registro de salidas · Copyright (C) 2026 Daniel Montiel <dmonrui264@g.educaand.es> · IES Campanillas (Málaga)
+  Software libre: puedes redistribuirlo y/o modificarlo bajo los términos de la Licencia Pública General GNU
+  versión 3 o posterior. Se distribuye SIN NINGUNA GARANTÍA. Texto completo: archivo LICENSE y
+  https://www.gnu.org/licenses/gpl-3.0.html
+  SPDX-License-Identifier: GPL-3.0-or-later
+-->
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Registro de salidas</title>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=optional" rel="stylesheet">
+<style>
+:root{--bg:#f2f5f4;--card:#fff;--text:#16302b;--muted:#5d726d;--line:#d5dfdc;--accent:#0f6b5c;--on-accent:#fff;--out:#c2410c;--out-bg:#ffedd5;--bar:#0f6b5c;--warn:#b91c1c;--warn-bg:#fee2e2;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1b19;--card:#172724;--text:#e6f0ed;--muted:#97aea8;--line:#2a403c;--accent:#4fd1b5;--on-accent:#06201b;--out:#fdba74;--out-bg:#3a2412;--bar:#4fd1b5;--warn:#fca5a5;--warn-bg:#3b1717;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f1b19;--card:#172724;--text:#e6f0ed;--muted:#97aea8;--line:#2a403c;--accent:#4fd1b5;--on-accent:#06201b;--out:#fdba74;--out-bg:#3a2412;--bar:#4fd1b5;--warn:#fca5a5;--warn-bg:#3b1717;color-scheme:dark}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.4 "Atkinson Hyperlegible",system-ui,sans-serif}
+.wrap{max-width:720px;margin:0 auto;padding:12px 14px 40px}
+header{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:10px}
+h1{font-size:20px;margin:0}
+.teacher{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted)}
+input,select,button{font:inherit;color:inherit}
+input[type=text],input[type=number],input[type=time]{background:var(--card);border:1.5px solid var(--line);border-radius:8px;padding:9px 10px;min-width:0}
+input:focus-visible,button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+nav{display:flex;gap:6px;margin:8px 0 14px;border-bottom:2px solid var(--line)}
+nav button{flex:1;background:none;border:0;padding:11px 6px;font-weight:700;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-2px;cursor:pointer}
+nav button[aria-selected=true]{color:var(--accent);border-bottom-color:var(--accent)}
+.badge{display:inline-block;min-width:22px;padding:1px 7px;border-radius:99px;background:var(--out-bg);color:var(--out);font-size:13px;margin-left:4px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:10px}
+.chip{flex:none;padding:9px 14px;border-radius:99px;border:1.5px solid var(--line);background:var(--card);cursor:pointer;font-weight:700}
+.chip[aria-pressed=true]{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.search{width:100%;margin-bottom:10px}.teacher select{background:var(--card);border:1.5px solid var(--line);border-radius:8px;padding:9px 10px;max-width:60vw}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px}
+.stu{display:flex;justify-content:space-between;align-items:center;gap:8px;text-align:left;padding:14px;border-radius:12px;border:1.5px solid var(--line);background:var(--card);cursor:pointer;min-height:56px}
+.stu:active{opacity:.7}
+.stu small{color:var(--muted)}
+.stu[disabled]{background:var(--card);border:2px dashed var(--muted);cursor:not-allowed;opacity:.65}
+.tag{font-size:13px;font-weight:700;color:var(--out)}
+.hint,.empty{color:var(--muted);font-size:14px;margin:6px 0 12px}
+.empty{text-align:center;padding:30px 10px;border:1.5px dashed var(--line);border-radius:12px}
+.card{background:var(--card);border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:8px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.row b{display:block}
+.row small{color:var(--muted)}
+.timer{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}
+.timer.late{color:var(--warn)}
+.btn{background:var(--accent);color:var(--on-accent);border:0;border-radius:10px;padding:11px 16px;font-weight:700;cursor:pointer}
+.btn.ghost{background:none;color:var(--accent);border:1.5px solid var(--accent)}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.kpi{background:var(--card);border:1.5px solid var(--line);border-radius:12px;padding:10px 12px}
+.kpi b{font-size:26px;display:block}
+.kpi span{font-size:13px;color:var(--muted)}
+h2{font-size:16px;margin:18px 0 8px}
+.bar{display:grid;grid-template-columns:minmax(90px,38%) 1fr 28px;gap:8px;align-items:center;margin:6px 0;font-size:14px}
+.track{background:var(--line);border-radius:6px;height:12px;overflow:hidden}
+.fill{height:100%;background:var(--bar);border-radius:6px}
+.fill.over{background:var(--warn)}
+.bar.over .n{color:var(--warn);font-weight:700}
+.bar .n{text-align:right;font-variant-numeric:tabular-nums}
+.limit{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:14px;margin:8px 0}
+.limit input{width:64px}.limit select{background:var(--card);border:1.5px solid var(--line);border-radius:8px;padding:8px 10px}
+.toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--text);color:var(--bg);padding:11px 16px;border-radius:10px;display:none;gap:14px;align-items:center;z-index:5;max-width:92vw}
+.toast.on{display:flex}
+.toast button{background:none;border:0;color:inherit;font-weight:700;text-decoration:underline;cursor:pointer}
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);white-space:nowrap}
+.demo{font-size:13px;background:var(--card);border:1.5px dashed var(--line);border-radius:10px;padding:8px 12px;margin-bottom:10px;color:var(--muted)}
+[hidden]{display:none!important}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{height:48px;width:auto;aspect-ratio:335/263;object-fit:contain;background:#fff;border-radius:10px;padding:4px;display:block}
+.login{min-height:100vh;min-height:100dvh;display:grid;place-items:center;padding:20px}
+.lcard{width:100%;max-width:360px;background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:24px;text-align:center}
+.lcard .logo{height:84px;margin:0 auto 12px}
+.lcard label{display:block;text-align:left;font-size:14px;color:var(--muted);margin:12px 0 4px}
+.lcard input{width:100%}.lcard .btn{width:100%;margin-top:16px}
+.err{color:var(--warn);min-height:20px;font-size:14px;margin-top:10px}
+.btn.sm{padding:7px 12px}.teacher b{color:var(--text)}
+.lv-g{background:color-mix(in srgb,#22a559 16%,var(--card));border-color:#22a559}
+.lv-y{background:color-mix(in srgb,#eab308 22%,var(--card));border-color:#eab308}
+.lv-o{background:color-mix(in srgb,#f97316 22%,var(--card));border-color:#f97316}
+.lv-r{background:color-mix(in srgb,#dc2626 22%,var(--card));border-color:#dc2626;font-weight:700}
+.modal{position:fixed;inset:0;z-index:20;display:grid;place-items:center;padding:16px;background:rgba(0,0,0,.5)}
+.mbox{background:var(--card);color:var(--text);border:2px solid var(--warn);border-radius:14px;padding:18px 20px;width:min(92vw,400px);max-height:85vh;max-height:85dvh;overflow:auto}
+.mbox h3{margin:0 0 8px;color:var(--warn);font-size:18px}
+.mbox p{margin:6px 0}
+.acts{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:16px}
+.warnb{color:var(--warn);font-weight:700}
+.cand{display:flex;gap:10px;align-items:center;padding:10px 2px;border-bottom:1px solid var(--line);cursor:pointer}
+.cand input{width:22px;height:22px;flex:none}
+.cand small{color:var(--muted);display:block}
+.pill{display:inline-block;background:var(--warn-bg);color:var(--warn);border-radius:99px;padding:2px 9px;font-size:13px;font-weight:700;margin:6px 4px 0 0}
+@media (max-width:420px){nav button{font-size:14px;padding:11px 2px}}
+body{overflow-x:hidden;-webkit-text-size-adjust:100%}@supports (overflow:clip){body{overflow-x:clip}}
+nav,.chips,.scroll{overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch}
+button,input,select,.stu,.chip{touch-action:manipulation}
+input,select{font-size:16px}
+input[type=password]{background:var(--card);border:1.5px solid var(--line);border-radius:8px;padding:9px 10px;min-width:0}
+.hq{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.hdates{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+.hdates label{font-size:14px;color:var(--muted);display:flex;flex-direction:column;gap:4px}
+input[type=date]{background:var(--card);border:1.5px solid var(--line);border-radius:8px;padding:9px 10px;min-width:0;font-size:16px;color:var(--text)}
+.pick{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+.pick input,.pick select{flex:1;min-width:0}
+.pick select{background:var(--card);border:1.5px solid var(--line);border-radius:8px;padding:9px 10px;font-size:16px;color:var(--text)}
+nav{overflow-x:auto}nav button{white-space:nowrap;flex:1 0 auto;padding-left:12px;padding-right:12px}
+/* Acceso: selector de perfil, mostrar contraseña y pantalla de carga */
+.lcard .lbl{display:block;text-align:left;font-size:14px;color:var(--muted);margin:12px 0 4px}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:var(--bg);border:1.5px solid var(--line);border-radius:12px;padding:4px}
+.seg button{border:0;background:none;padding:10px 2px;border-radius:9px;font-weight:700;font-size:14px;color:var(--muted);cursor:pointer;transition:background .15s,color .15s}
+.seg button[aria-pressed=true]{background:var(--accent);color:var(--on-accent)}
+.lcard select{width:100%;background:var(--card);border:1.5px solid var(--line);border-radius:8px;padding:9px 10px}
+.pw{position:relative}.lcard .pw input{padding-right:48px}
+.eye{position:absolute;right:3px;top:50%;transform:translateY(-50%);width:40px;height:40px;border:0;background:none;color:var(--muted);cursor:pointer;display:grid;place-items:center;border-radius:8px}
+.eye svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.eye[aria-pressed=true]{color:var(--accent)}.eye[aria-pressed=true] .e-on,.eye[aria-pressed=false] .e-off{display:none}
+.lcard .sr{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;overflow:hidden;padding:0;border:0}
+.busy{position:fixed;inset:0;z-index:30;display:grid;place-items:center;background:color-mix(in srgb,var(--bg) 90%,transparent);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);animation:bIn .25s ease}
+.busy-in{text-align:center}
+.busy p{margin:6px 0 0;color:var(--muted);font-size:15px;letter-spacing:.02em}
+.tap{width:120px;height:120px;overflow:visible}
+.tap .pipe{fill:none;stroke:var(--accent);stroke-width:6;stroke-linecap:round;stroke-linejoin:round}
+.tap .stem{fill:none;stroke:var(--accent);stroke-width:4;stroke-linecap:round}
+.tap .handle{fill:var(--accent)}
+.tap .basin{fill:color-mix(in srgb,var(--accent) 12%,transparent);stroke:var(--accent);stroke-width:5;stroke-linejoin:round}
+.tap .rip{fill:none;stroke:var(--accent);stroke-width:2;opacity:0;transform-box:fill-box;transform-origin:center;animation:rip 1.8s linear infinite}
+.tap .r2{animation-delay:.25s}
+.tap .drop{fill:var(--accent);opacity:0;transform-box:fill-box;transform-origin:50% 0;animation:drip 1.8s linear infinite}
+@keyframes drip{0%{opacity:0;transform:translateY(0) scale(.2)}22%{opacity:1;transform:translateY(0) scale(1);animation-timing-function:cubic-bezier(.55,0,1,.7)}58%{opacity:1;transform:translateY(25px) scale(.95,1.1)}62%{opacity:0;transform:translateY(28px) scale(.5)}100%{opacity:0;transform:translateY(28px) scale(.5)}}
+@keyframes rip{0%,60%{opacity:0;transform:scale(.1)}62%{opacity:.85;transform:scale(.15)}100%{opacity:0;transform:scale(1)}}
+@keyframes bIn{from{opacity:0}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){.tap .drop{animation:none;opacity:1}.tap .rip{animation:none}.busy{animation:none}}
+/* Acceso del alumnado y pantallas de resultado */
+.ltabs{display:flex;gap:6px;margin:2px 0 12px;border-bottom:2px solid var(--line)}
+.ltabs button{flex:1;background:none;border:0;padding:11px 6px;font-weight:700;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-2px;cursor:pointer}
+.ltabs button[aria-selected=true]{color:var(--accent);border-bottom-color:var(--accent)}
+.res{position:fixed;inset:0;z-index:40;display:grid;place-items:center;padding:24px 20px 40px;color:#fff;text-align:center;cursor:pointer;animation:bIn .2s ease}
+.res.ok{background:#15803d}.res.no{background:#b91c1c}
+.res-in{max-width:420px;width:100%}
+.res svg{width:96px;height:96px;fill:none;stroke:#fff;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.res h2{font-size:28px;margin:10px 0 6px;color:#fff}
+.res .rn{font-size:24px;font-weight:700;margin:12px 0 2px;overflow-wrap:anywhere}
+.res .rc{font-size:18px;margin:0;opacity:.95}
+.res .rs{display:flex;gap:12px;justify-content:center;margin:20px 0 14px}
+.res .rs div{background:rgba(255,255,255,.18);border-radius:14px;padding:12px 14px;flex:1;max-width:170px}
+.res .rs b{display:block;font-size:42px;line-height:1.05}
+.res .rs span{font-size:14px}
+.res .rp{font-size:18px;margin:6px 0}
+.res .rm{font-size:19px;margin:6px 0}
+.res .rt{font-size:14px;opacity:.85;margin:20px 0 0}
+.res-bar{position:absolute;left:0;right:0;bottom:env(safe-area-inset-bottom,0px);height:8px;background:rgba(255,255,255,.28)}
+.res-bar i{display:block;height:100%;background:#fff;transform-origin:left;animation:rb 5s linear forwards}
+@keyframes rb{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+.note{background:color-mix(in srgb,var(--accent) 10%,var(--card));border:1.5px solid var(--line);border-left:4px solid var(--accent);border-radius:10px;padding:10px 12px;margin:10px 0 4px;text-align:left;font-size:14px;line-height:1.45}
+.note code{background:var(--bg);border-radius:6px;padding:1px 7px;font-size:15px;font-weight:700;letter-spacing:.04em}
+.note small{color:var(--muted)}
+.stu .cd{background:var(--bg);border-radius:5px;padding:0 5px;font-size:13px;font-weight:700;color:var(--text);letter-spacing:.03em}
+/* Observaciones, cambio de contraseña, licencia */
+.lv-b{background:color-mix(in srgb,#2563eb 16%,var(--card));border-color:#2563eb}
+.exc{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:#2563eb;color:#fff;font-size:14px;line-height:1;vertical-align:1px;margin-left:4px}
+textarea{font:inherit;font-size:16px;color:inherit;width:100%;min-height:92px;resize:vertical;background:var(--card);border:1.5px solid var(--line);border-radius:8px;padding:9px 10px}
+textarea:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.otxt{white-space:pre-wrap;overflow-wrap:anywhere;margin:8px 0 0;font-size:15px}
+.mbox.n{border-color:var(--accent)}.mbox.n h3{color:var(--text)}
+.mbox label{display:block;font-size:14px;color:var(--muted);margin:10px 0 4px}
+.mbox input[type=password],.mbox input[type=text]{width:100%}
+.mbox label.chk{display:flex;align-items:center;gap:8px;margin-top:12px}.mbox label.chk input{width:20px;height:20px}
+.lic{font-size:12px;color:var(--muted);text-align:center;margin:18px 0 0}.lic a{color:var(--accent)}
+.lnk{background:none;border:0;color:var(--muted);text-decoration:underline;font-size:13px;padding:10px 8px 0;cursor:pointer}
+.admt td{white-space:normal;vertical-align:top}
+.fn{margin:6px 0;font-weight:700}.fn code{background:var(--bg);border-radius:6px;padding:2px 8px;font-size:15px}
+.ej{margin:4px 0 8px 18px;padding:0;font-size:13px;color:var(--muted)}
+.avs{font-size:13px;color:var(--muted);margin:8px 0}
+input[type=file]{font:inherit;font-size:15px;max-width:100%;margin:6px 0}
+</style>
+</head>
+<body>
+<div class="login" id="login"><div class="lcard"><img class="logo" width="335" height="263" alt="Logo del centro" style="visibility:hidden" onload="this.style.visibility='visible'" onerror="logoErr(this)"><h1>Registro de salidas</h1><div class="ltabs" role="tablist"><button type="button" role="tab" data-w="per" aria-selected="true">Personal</button><button type="button" role="tab" data-w="alu" aria-selected="false">Alumnado</button></div>
+<div id="paPer"><p class="hint">Elige tu acceso e introduce la contraseña.</p>
+<form id="lf"><span class="lbl" id="lAcc">Acceso</span>
+<div class="seg" id="seg" role="group" aria-labelledby="lAcc"><button type="button" data-u="guardia" aria-pressed="false">Guardia</button><button type="button" data-u="conserjeria" aria-pressed="false">Conserjería</button><button type="button" data-u="" aria-pressed="true">Profesorado</button></div>
+<p class="hint" id="admNote" hidden><b>Acceso de administración</b></p>
+<div id="profBox"><label for="pSel">Profesor/a</label><select id="pSel"><option value="">Cargando…</option></select></div>
+<input type="text" id="u" class="sr" autocomplete="username" readonly tabindex="-1" aria-hidden="true">
+<label for="k">Contraseña</label><div class="pw"><input type="password" id="k" autocomplete="current-password"><button type="button" class="eye" id="eye" aria-pressed="false" aria-label="Mostrar contraseña"><svg viewBox="0 0 24 24" aria-hidden="true"><g class="e-on"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></g><g class="e-off"><path d="M3 3l18 18"/><path d="M10.6 5.1A10.4 10.4 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4.1M6.5 6.5A16.6 16.6 0 0 0 2 12s3.6 7 10 7a10 10 0 0 0 4.5-1"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></g></svg></button></div>
+<button class="btn" type="submit" id="go">Entrar</button></form><div class="err" id="err" role="alert"></div><button type="button" class="lnk" id="admLnk">Acceso de administración</button></div>
+<div id="paAlu" hidden><p class="hint">Escribe tu código de baño para apuntar tu salida. Esta opción no da acceso a la aplicación.</p>
+<form id="af" autocomplete="off"><label for="cod">Código de baño</label><input type="text" id="cod" placeholder="Ejemplo: mlozvid" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" maxlength="40">
+<div class="note" id="codNote"><b>¿Cómo es tu código?</b><br>1.ª letra de tu nombre + 3 primeras letras de tu 1.er apellido + 3 primeras letras de tu 2.º apellido, todo en minúsculas y sin tildes.<br>Ejemplo: <b>Lozano Vidal, Marcos</b> → <code>mlozvid</code><br><small>Si el apellido es «De la Cruz», se usa «cru». Si no te funciona, pregunta a un profesor.</small></div>
+<button class="btn" type="submit" id="aGo">Registrar salida</button></form><div class="err" id="aErr" role="alert"></div></div>
+<p class="lic">© 2026 IES Campanillas (Málaga) · Software libre · <a href="https://www.gnu.org/licenses/gpl-3.0.html" target="_blank" rel="noopener">Licencia GNU GPL v3</a></p></div></div>
+<div class="busy" id="busy" hidden role="status" aria-live="polite"><div class="busy-in"><svg class="tap" viewBox="0 0 120 120" aria-hidden="true"><path class="basin" d="M18 86H102Q102 112 60 112Q18 112 18 86Z"/><path class="stem" d="M54 21V27"/><rect class="handle" x="43" y="16" width="22" height="5" rx="2.5"/><path class="pipe" d="M34 86V46a16 16 0 0 1 16-16H68a12 12 0 0 1 12 12V46"/><ellipse class="rip r1" cx="80" cy="92" rx="16" ry="3.5"/><ellipse class="rip r2" cx="80" cy="92" rx="16" ry="3.5"/><path class="drop" d="M80 52C77 57 74 61 74 64a6 6 0 0 0 12 0C86 61 83 57 80 52Z"/></svg><p id="busyTxt">Cargando…</p></div></div>
+<div class="wrap" id="app" hidden>
+<header>
+  <div class="brand"><img class="logo" width="335" height="263" alt="Logo del centro" style="visibility:hidden" onload="this.style.visibility='visible'" onerror="logoErr(this)"><h1>Registro de salidas</h1></div>
+  <div class="teacher"><span id="me"></span><button class="btn ghost sm" id="pw" type="button" hidden>Contraseña</button><button class="btn ghost sm" id="bye" type="button">Salir</button></div>
+</header>
+<nav role="tablist">
+  <button role="tab" data-t="sum" aria-selected="true">Resumen</button>
+  <button role="tab" data-t="reg" aria-selected="false">Registrar</button>
+  <button role="tab" data-t="out" aria-selected="false">Fuera ahora<span class="badge" id="nOut">0</span></button>
+  <button role="tab" data-t="inc" aria-selected="false">Incidencias</button>
+  <button role="tab" data-t="obs" aria-selected="false">Observaciones</button>
+  <button role="tab" data-t="his" aria-selected="false">Historial</button>
+  <button role="tab" data-t="adm" id="tAdm" aria-selected="false" hidden>Administración</button>
+</nav>
+
+<section id="reg" hidden>
+  <div class="chips" id="chips"></div>
+  <input type="text" class="search" id="q" placeholder="Buscar alumno, alumna o código" autocomplete="off">
+  <div class="grid" id="grid"></div>
+  <p class="hint">Un toque en el nombre registra la salida. Entre paréntesis, las salidas de esta semana; el color pasa de verde a rojo al acercarse al máximo. Si ya ha salido hoy, se pedirá confirmación; ⚠ indica incidencias de baño de los últimos 35 días. En azul con <b>!</b>: tiene una observación (ver pestaña Observaciones) y no le afecta el máximo semanal.</p>
+</section>
+
+<section id="out" hidden><p class="hint">Si pasan 15 minutos, se marca la vuelta automáticamente.</p><div id="outList"></div><p class="hint" id="dbg"></p></section>
+
+<section id="inc" hidden>
+  <p class="hint">Si el baño está sucio, regístralo aquí. Se listan quienes salieron justo antes de la hora indicada; marca a quien corresponda y aparecerá señalado (⚠) en Registrar.</p>
+  <div class="card">
+    <div class="limit"><label>Hora en que se vio <input type="time" id="iT"></label><label>Salidas de los últimos <select id="iW"><option value="30">30 min</option><option value="60" selected>1 hora</option><option value="120">2 horas</option></select></label></div>
+    <div id="iCand"></div>
+    <input type="text" class="search" id="iNote" style="margin-top:10px" placeholder="Nota (opcional): baño de la planta baja…" maxlength="200" autocomplete="off">
+    <button class="btn" id="iSave" type="button">Registrar incidencia</button>
+  </div>
+  <h2>Incidencias recientes</h2><div id="iList"></div>
+</section>
+
+<section id="obs" hidden>
+  <p class="hint">Anota aquí una circunstancia de un alumno o alumna. En Registrar aparecerá en azul con un <b>!</b> y no le afectará el máximo semanal. La observación completa solo se ve en esta pestaña.</p>
+  <div class="card">
+    <div class="limit"><label>Curso <select id="oC"></select></label><label>Alumno/a <select id="oA"></select></label></div>
+    <textarea id="oT" maxlength="500" rows="3" placeholder="Observación…"></textarea>
+    <button class="btn" id="oSave" type="button" style="margin-top:10px">Guardar observación</button>
+  </div>
+  <h2>Observaciones registradas</h2>
+  <input type="text" class="search" id="oQ" placeholder="Buscar por alumno o texto" autocomplete="off">
+  <div id="oList"></div>
+</section>
+
+<section id="adm" hidden>
+  <p class="hint">Actualiza las listas con los ficheros CSV descargados de Séneca. Primero se muestra una vista previa y no se cambia nada hasta que pulses «Aplicar cambios».</p>
+  <div class="card">
+    <h2 style="margin-top:0">Profesorado</h2>
+    <p class="fn">Fichero que debes adjuntar: <code>RelPerCen.csv</code></p>
+    <p class="hint">Se usan las columnas <b>Empleado/a</b>, <b>Usuario IdEA</b> y <b>DNI/Pasaporte</b> (contraseña inicial de quien se añada).</p>
+    <input type="file" id="fP" accept=".csv,text/csv">
+    <label class="cand" style="border:0"><input type="checkbox" id="bP" checked><span>Quitar a quien ya no figure en el fichero<small>Guardia, conserjería y admin nunca se quitan.</small></span></label>
+    <button class="btn ghost" type="button" data-adm-rev="prof">Revisar cambios</button>
+    <div id="vP"></div>
+  </div>
+  <div class="card">
+    <h2 style="margin-top:0">Alumnado</h2>
+    <p class="fn">Fichero que debes adjuntar: <code>RegAlum.csv</code></p>
+    <p class="hint">Se usan las columnas <b>Unidad</b> y <b>Alumno/a</b>; no se importa a quien tenga rellena la columna <b>Estado Matrícula</b>.</p>
+    <input type="file" id="fA" accept=".csv,text/csv">
+    <label class="cand" style="border:0"><input type="checkbox" id="bA" checked><span>Quitar a quien ya no figure en el fichero<small>Su historial y sus observaciones se conservan.</small></span></label>
+    <button class="btn ghost" type="button" data-adm-rev="alu">Revisar cambios</button>
+    <div id="vA"></div>
+  </div>
+  <div class="card">
+    <h2 style="margin-top:0">Logo</h2>
+    <p class="hint">Dirección (https://…) de la imagen del logo. Se verá en la pantalla de acceso y en la cabecera. Si está en Google Drive, comparte la imagen con «Cualquier persona con el enlace» y pega ese enlace.</p>
+    <img class="logo" id="logoPrev" width="335" height="263" alt="Logo actual" style="visibility:hidden" onload="this.style.visibility='visible'" onerror="logoErr(this)">
+    <input type="text" class="search" id="lUrl" placeholder="https://…/logo.png" inputmode="url" autocapitalize="off" autocorrect="off" spellcheck="false" style="margin-top:10px">
+    <div class="acts" style="justify-content:flex-start;margin-top:0"><button class="btn" type="button" id="lSave">Guardar logo</button><button class="btn ghost" type="button" id="lDef">Restaurar el original</button></div>
+    <div id="vL"></div>
+  </div>
+</section>
+
+<section id="sum">
+  <div class="hq" id="sMode"><button class="chip" data-m="d" type="button">Día</button><button class="chip" data-m="w" type="button">Semana</button><button class="chip" data-m="t" type="button">Trimestre</button></div>
+  <div class="pick"><button class="btn ghost sm" id="sPrev" type="button" aria-label="Anterior">‹</button><input type="date" id="sDate"><select id="sTri" hidden></select><button class="btn ghost sm" id="sNext" type="button" aria-label="Siguiente">›</button><button class="btn ghost sm" id="sNow" type="button">Hoy</button></div>
+  <p class="hint"><b id="sLbl"></b></p><p class="hint" id="sInfo"></p>
+  <div class="kpis">
+    <div class="kpi"><b id="kA">0</b><span>Salidas</span></div>
+    <div class="kpi"><b id="kB">0</b><span>Alumnos distintos</span></div>
+    <div class="kpi"><b id="kC">0</b><span>Minutos de media</span></div>
+  </div>
+  <p class="hint" id="limTxt"></p>
+  <h2>Resumen por curso</h2>
+  <div class="scroll"><table><thead id="sHead"></thead><tbody id="byCur"></tbody></table></div>
+  <h2>Alumnado</h2><label class="limit">Curso <select id="sc"></select></label><div id="byStu"></div>
+  <div id="dayBox"><h2 id="dayH">Por día</h2><div id="byDay"></div></div>
+  <h2>Por hora del día</h2><div id="byHour"></div>
+</section>
+<section id="his" hidden>
+  <h2>Historial de salidas</h2>
+  <div class="hq" id="hQ"><button class="chip" data-q="0" type="button">Hoy</button><button class="chip" data-q="6" type="button">7 días</button><button class="chip" data-q="29" type="button">30 días</button><button class="chip" data-q="all" type="button">Todo</button></div>
+  <div class="hdates"><label>Desde <input type="date" id="hD"></label><label>Hasta <input type="date" id="hH"></label></div>
+  <p class="hint" id="hInfo"></p>
+  <div class="scroll"><table><thead><tr><th>Alumno/a</th><th>Curso</th><th>Fecha</th><th>Salida</th><th>Min.</th><th>Profesor/a</th><th></th></tr></thead><tbody id="hRows"></tbody></table></div>
+  <button class="btn ghost" id="hMore" type="button" hidden style="margin-top:10px">Mostrar más</button>
+</section>
+<p class="lic">© 2026 IES Campanillas (Málaga) · Software libre · <a href="https://www.gnu.org/licenses/gpl-3.0.html" target="_blank" rel="noopener">Licencia GNU GPL v3</a></p>
+</div>
+<div class="modal" id="warn" hidden role="alertdialog" aria-modal="true" aria-labelledby="wT"><div class="mbox"><h3 id="wT">⚠ Salida repetida</h3><div id="wP"></div><div class="acts"><button class="btn ghost" type="button" id="wNo">Cancelar</button><button class="btn" type="button" id="wOk">Registrar de todos modos</button></div></div></div>
+<div class="modal" id="pwd" hidden role="dialog" aria-modal="true" aria-labelledby="pT"><div class="mbox n"><h3 id="pT">Cambiar contraseña</h3>
+<form id="pf" autocomplete="off"><label for="pA">Contraseña actual</label><input type="password" id="pA" autocomplete="current-password">
+<label for="pN">Nueva contraseña (mínimo 6 caracteres)</label><input type="password" id="pN" autocomplete="new-password">
+<label for="pR">Repite la nueva contraseña</label><input type="password" id="pR" autocomplete="new-password">
+<label class="chk"><input type="checkbox" id="pShow"> Mostrar contraseñas</label>
+<div class="err" id="pErr" role="alert"></div>
+<div class="acts"><button class="btn ghost" type="button" id="pNo">Cancelar</button><button class="btn" type="submit" id="pOk">Guardar</button></div></form></div></div>
+<div class="res" id="res" hidden role="alert" aria-live="assertive"><div class="res-in" id="resIn"></div><div class="res-bar"><i id="resBar"></i></div></div>
+<div class="toast" id="toast"><span id="tmsg"></span><button id="undo">Deshacer</button></div>
+
+<script>
+/* Aviso de errores: si algo falla al arrancar, se muestra aquí en lugar de dejar la pantalla en gris */
+(function(){function f(m){var d=document.getElementById("fatal");if(!d){d=document.createElement("div");d.id="fatal";d.setAttribute("style","position:fixed;left:0;right:0;bottom:0;z-index:99;background:#fee2e2;color:#7f1d1d;font:13px/1.4 sans-serif;padding:8px 12px;white-space:pre-wrap");(document.body||document.documentElement).appendChild(d)}d.textContent="Error: "+m}
+window.addEventListener("error",function(e){f((e.message||"")+(e.lineno?" (línea "+e.lineno+")":""))});
+window.addEventListener("unhandledrejection",function(e){f(String(e.reason&&e.reason.message||e.reason))})})();
+</script>
+<script>
+let COURSES={},CODES={},MAX=4,TOKEN="",ME="";
+const $=s=>document.querySelector(s), MIN=60000,LIM=15;
+// El reloj del equipo puede ir adelantado o atrasado: se toma la hora del servidor como referencia
+let SKEW=0;const now=()=>Date.now()+SKEW;
+const setSkew=(srv,t0)=>{if(srv>0)SKEW=srv-Math.round((t0+Date.now())/2)};
+function expire(){const t=now();log.forEach(l=>{if(l.back===null&&t-l.out>=LIM*MIN)l.back=l.out+LIM*MIN})}
+let obs=[],OBS={},CP=false,ADM=false;
+let log=[], inc=[], sel=new Set(), course=Object.keys(COURSES)[0], lastId=null, tt, dt, delArm=null, syncing=false;
+// Cambios locales aún no confirmados por la hoja (evitan que la sincronización de 30 s los pise)
+const pendOut=new Map(), pendDel=new Map(), pendBack=new Map();
+const after=(id,fn)=>{const p=pendOut.get(id);return(p&&p.p?p.p.catch(()=>{}):Promise.resolve()).then(fn)};
+const settled=(po,t0)=>po&&po.ack&&po.ack<t0; // la hoja ya lo tenía escrito antes de empezar la lectura
+function mergeList(sv,loc,t0){
+  const ids=new Set(sv.map(x=>x.id));
+  const out=sv.filter(x=>{const d=pendDel.get(x.id);return !(d&&!settled(d,t0))});
+  loc.forEach(x=>{if(ids.has(x.id)||pendDel.has(x.id))return;const po=pendOut.get(x.id);if(po&&!settled(po,t0))out.push(x)});
+  return out;
+}
+function mergeLog(sv,t0){
+  const out=mergeList(sv,log,t0);
+  out.forEach(l=>{const pb=pendBack.get(l.id);if(pb&&l.back===null&&!settled(pb,t0))l.back=pb.t});
+  [pendOut,pendDel,pendBack].forEach(m=>m.forEach((v,k)=>{if(settled(v,t0))m.delete(k)}));
+  return out;
+}
+
+// Respuestas del servidor: texto JSON; si trae "error", se lanza para verlo en pantalla
+async function srvJ(fn,...a){const r=JSON.parse(await srv(fn,...a));if(r&&r.error)throw new Error(r.error);return r}
+const DBG={a:"",b:""};
+function dbg(k,m){DBG[k]=new Date().toLocaleTimeString("es-ES")+" · "+m;$("#dbg").textContent="Estado: "+DBG.a+(DBG.b?" | "+DBG.b:"")}
+function srv(fn,...a){return new Promise((ok,ko)=>google.script.run.withSuccessHandler(ok).withFailureHandler(ko)[fn](...a))}
+/* Con tiempo máximo: en el móvil una llamada puede quedarse colgada para siempre al cambiar de red o suspenderse la pantalla */
+function srvT(ms,fn,...a){return new Promise((ok,ko)=>{const t=setTimeout(()=>ko(new Error("Tiempo de espera agotado")),ms);srv(fn,...a).then(v=>{clearTimeout(t);ok(v)},e=>{clearTimeout(t);ko(e)})})}
+async function srvJT(ms,fn,...a){const r=JSON.parse(await srvT(ms,fn,...a));if(r&&r.error)throw new Error(r.error);return r}
+/* Solo toca el DOM si el contenido ha cambiado: un botón que se sustituye mientras se pulsa pierde el toque */
+function setHTML(el,h){if(el._h!==h){el._h=h;el.innerHTML=h}}
+/* Navegadores integrados (WhatsApp, Gmail...) no recuperan bien la pantalla al cerrarse el teclado: se cierra y se recoloca la vista */
+function resetViewport(){if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();[0,150,400,900].forEach(t=>setTimeout(()=>{window.scrollTo(0,0);window.dispatchEvent(new Event("resize"))},t))}
+function show(on){if(!on)cargarProfes();const antes=!$("#app").hidden;$("#login").hidden=on;$("#app").hidden=!on;if(on&&!antes)resetViewport()}
+function weekStart(){const d=new Date(now());d.setHours(0,0,0,0);d.setDate(d.getDate()-((d.getDay()+6)%7));return d.getTime()}
+function wkCount(){const m=weekStart(),r={};log.forEach(l=>{if(l.out>=m)r[l.n]=(r[l.n]||0)+1});return r}
+function lvl(k){return k>=MAX?"lv-r":k>0&&k>=MAX-1?"lv-o":k>0&&k>=Math.ceil(MAX/2)?"lv-y":"lv-g"}
+// La hoja "Fuera" es la fuente de verdad de quién está fuera ahora
+function applyFuera(list,t0){
+  const ids=new Set(list.map(x=>x.id));
+  list.forEach(x=>{
+    const d=pendDel.get(x.id);if(d&&!settled(d,t0))return;
+    const e=log.find(l=>l.id===x.id);
+    if(!e)log.push({id:x.id,out:x.out,n:x.n,c:x.c,p:x.p,back:null});
+    else if(e.back===null)e.out=x.out; // la hoja "Fuera" manda también en la hora de salida
+  });
+  log.forEach(l=>{
+    if(l.back!==null||ids.has(l.id))return;
+    const po=pendOut.get(l.id);if(po&&!settled(po,t0))return;
+    l.back=Math.min(now(),l.out+LIM*MIN);
+  });
+}
+function setData(d,t0){
+  COURSES=d.courses;CODES=d.codes||{};CP=!!d.cp;ADM=!!d.adm;$("#tAdm").hidden=!ADM;obs=mergeList(d.obs||[],obs,t0);rebuildObs();$("#pw").hidden=!CP;MAX=d.max;ME=d.me;TRI=d.tri||[];log=mergeLog(d.log,t0);inc=mergeList(d.inc||[],inc,t0);
+  if(d.fuera)applyFuera(d.fuera,t0);
+  if(!COURSES[course])course=Object.keys(COURSES)[0];
+  $("#me").textContent=ME;$("#limTxt").textContent=`Máximo semanal fijado por el centro: ${MAX} salidas.`;
+  const so=$("#sc"),sh='<option value="all">Todos (los 10 con más salidas)</option>'+Object.keys(COURSES).map(c=>`<option>${c}</option>`).join("");
+  if(so._h!==sh){const v=so.value||"all";so.innerHTML=sh;so._h=sh;so.value=v} // no se toca mientras el desplegable esté abierto
+}
+async function sync(){if(syncing)return;syncing=true;const t0=Date.now();try{const d=await srvJT(30000,"getInicial",TOKEN);if(!d){dbg("a","sesión no válida");return logout()}setSkew(d.ahora,t0);setData(d,t0);renderChips();refresh();show(true);initSum();dbg("a","lectura completa OK ("+d.log.length+" registros, "+d.fuera.length+" fuera)")}catch(e){const m=(e&&e.message)||String(e);dbg("a","ERROR al leer: "+m);toast("Error al leer la hoja: "+m);if($("#app").hidden)show(false)}finally{syncing=false}}
+let syncingF=false;
+async function syncFuera(){if(!TOKEN||syncing||syncingF||document.hidden)return;syncingF=true;const t0=Date.now();try{const f=await srvJT(20000,"getFuera",TOKEN);if(!f){dbg("b","sesión no válida");return logout()}setSkew(f.ahora,t0);applyFuera(f.lista,t0);refresh();dbg("b","fuera OK ("+f.lista.length+")")}catch(e){dbg("b","ERROR fuera: "+((e&&e.message)||e))}finally{syncingF=false}}
+/* Acceso: perfil (guardia / conserjería / profesorado), mostrar contraseña y pantalla de carga */
+let ACC="",profOK=false,profLoading=false,entrando=false;
+let busyT=0;
+function busy(on,msg){if(msg)$("#busyTxt").textContent=msg;$("#busy").hidden=!on;$("#go").disabled=on;$("#aGo").disabled=on;clearTimeout(busyT);if(on)busyT=setTimeout(()=>busy(false),45000)} // red de seguridad: nunca deja la pantalla tapada
+function setAcc(u){ACC=u;document.querySelectorAll("#seg button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.u===u));$("#profBox").hidden=!!u;$("#admNote").hidden=u!=="admin";$("#u").value=u||$("#pSel").value;$("#err").textContent="";cargarProfes()}
+async function cargarProfes(){if(profOK||profLoading)return;profLoading=true;const s=$("#pSel");s.innerHTML='<option value="">Cargando…</option>';
+  try{const l=await srvJ("listaLogin");s.innerHTML='<option value="">Elige tu nombre…</option>';l.forEach(p=>{const o=document.createElement("option");o.value=p.u;o.textContent=p.n;s.appendChild(o)});profOK=true}
+  catch(e){s.innerHTML='<option value="">No se pudo cargar la lista (toca para reintentar)</option>'}
+  finally{profLoading=false}}
+function ocultarClave(){$("#k").type="password";$("#eye").setAttribute("aria-pressed","false");$("#eye").setAttribute("aria-label","Mostrar contraseña")}
+async function login(){
+  if(entrando)return;
+  const u=ACC||$("#pSel").value,k=$("#k").value;$("#err").textContent="";
+  if(!u){$("#err").textContent="Elige tu nombre en la lista de profesorado";$("#pSel").focus();return}
+  if(!k){$("#err").textContent="Escribe la contraseña";$("#k").focus();return}
+  entrando=true;resetViewport();busy(true,"Comprobando acceso…");
+  try{const t=await srvT(30000,"entrar",u,k);
+    if(!t){$("#err").textContent="Usuario o contraseña incorrectos";return}
+    TOKEN=t;try{sessionStorage.setItem("tk",t)}catch(e){}$("#k").value="";ocultarClave();
+    busy(true,"Cargando datos…");await sync()}
+  catch(e){$("#err").textContent="No se pudo conectar. Inténtalo de nuevo"}
+  finally{entrando=false;busy(false)}
+}
+function logout(){TOKEN="";closeWarn(false);closePwd();obs=[];OBS={};CP=false;ADM=false;$("#pw").hidden=true;$("#tAdm").hidden=true;document.querySelectorAll("nav button").forEach(x=>x.setAttribute("aria-selected",x.dataset.t==="sum"));["reg","out","inc","obs","adm","sum","his"].forEach(s=>$("#"+s).hidden=s!=="sum");setLTab("per");setAcc("");$("#k").value="";ocultarClave();sumInit=false;SUM=null;["#byCur","#byStu","#byDay","#byHour"].forEach(q=>$(q).innerHTML="");histLoaded=false;histRows=[];$("#hRows").innerHTML="";try{sessionStorage.removeItem("tk")}catch(e){}show(false)}
+const fmtT=t=>new Date(t).toLocaleTimeString("es-ES",{hour:"2-digit",minute:"2-digit"});
+const fmtD=t=>new Date(t).toLocaleDateString("es-ES",{day:"2-digit",month:"2-digit"});
+const sameDay=(a,b)=>new Date(a).toDateString()===new Date(b).toDateString();
+const outNow=n=>log.find(l=>l.n===n&&l.back===null);
+const esc=s=>s.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+
+function todayCount(){const t=now(),r={};log.forEach(l=>{if(sameDay(l.out,t))r[l.n]=(r[l.n]||0)+1});return r}
+function incCount(){const r={};inc.forEach(i=>i.s.forEach(n=>{r[n]=(r[n]||0)+1}));return r}
+const nowHM=()=>{const d=new Date(now());return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0")};
+function incT(){const v=$("#iT").value,d=new Date(now());if(v){const[h,m]=v.split(":").map(Number);d.setHours(h,m,59,999)}return Math.min(d.getTime(),now())}
+function cands(){const T=incT(),W=+$("#iW").value*MIN;return log.filter(l=>l.out<=T&&(l.back===null||l.back>=T-W)).sort((a,b)=>b.out-a.out)}
+function renderInc(){
+  setHTML($("#iCand"),cands().map(l=>`<label class="cand"><input type="checkbox" data-id="${l.id}" ${sel.has(l.id)?"checked":""}><span><b>${esc(l.n)}</b><small>${l.c} · ${fmtT(l.out)}${l.back?"–"+fmtT(l.back):" · aún fuera"}</small></span></label>`).join("")||`<div class="empty">Nadie salió en ese intervalo. Puedes registrar la incidencia igualmente.</div>`);
+  const list=[...inc].sort((a,b)=>b.t-a.t).slice(0,20);
+  setHTML($("#iList"),list.length?list.map(i=>`<div class="card"><div class="row"><div><b>${fmtD(i.t)} · ${fmtT(i.t)}</b><small>${esc(i.p)}${i.note?" · "+esc(i.note):""}</small></div><button class="btn ghost sm" data-del="${i.id}">Eliminar</button></div>${i.s.length?i.s.map(n=>`<span class="pill">${esc(n)}</span>`).join(""):`<small class="hint">Sin alumnado señalado</small>`}</div>`).join(""):`<div class="empty">No hay incidencias registradas.</div>`);
+}
+function ask(title,html,ok){$("#wT").textContent=title;$("#wP").innerHTML=html;$("#wOk").textContent=ok;return new Promise(res=>{if(warnRes)warnRes(false);warnRes=res;$("#warn").hidden=false;$("#wNo").focus()})}
+let warnRes=null;
+function askWarn(n,hoy){
+  const k=hoy.length,ic=incCount()[n]||0;
+  $("#wP").innerHTML=`<p><b>${esc(n)}</b> ya ha salido <b>${k===1?"1 vez":k+" veces"}</b> hoy:</p><p>${hoy.map(l=>"• a las <b>"+fmtT(l.out)+"</b>"+(l.back?" (volvió a las "+fmtT(l.back)+")":"")).join("<br>")}</p><p>Esta sería la salida n.º ${k+1} del día.</p>${ic?`<p class="warnb">Además tiene ${ic} incidencia${ic>1?"s":""} de baño.</p>`:""}`;
+  return ask("⚠ Salida repetida",$("#wP").innerHTML,"Registrar de todos modos");
+}
+function closeWarn(v){$("#warn").hidden=true;const r=warnRes;warnRes=null;if(r)r(v)}
+function renderChips(){
+  setHTML($("#chips"),Object.keys(COURSES).map(c=>`<button class="chip" aria-pressed="${c===course}" data-c="${c}">${c}</button>`).join(""));
+}
+function renderGrid(){
+  const q=$("#q").value.trim().toLowerCase(),W=wkCount(),H=todayCount(),IC=incCount();
+  const list=q?Object.entries(COURSES).flatMap(([c,a])=>a.map(n=>[n,c])).filter(([n])=>n.toLowerCase().includes(q)||(CODES[n]||"").toLowerCase().includes(q)):COURSES[course].map(n=>[n,course]);
+  setHTML($("#grid"),list.length?list.map(([n,c])=>{
+    const o=outNow(n),k=W[n]||0,ex=(H[n]?` · <span class="warnb">hoy: ${H[n]}×</span>`:"")+(IC[n]?` · <span class="warnb">⚠ ${IC[n]} incid.</span>`:"");
+    return `<button class="stu ${OBS[n]?"lv-b":lvl(k)}" data-n="${esc(n)}" data-c="${c}" ${o?"disabled":""}><span>${esc(n)} (${k})${OBS[n]?`<b class="exc" aria-label="Tiene observaciones">!</b>`:""}<br><small>${c}${CODES[n]?` · <code class="cd">${esc(CODES[n])}</code>`:""}${ex}</small></span>${o?`<span class="tag">Fuera desde ${fmtT(o.out)}</span>`:""}</button>`}).join(""):`<div class="empty">Ningún alumno coincide con la búsqueda.</div>`);
+}
+function renderOut(){
+  const o=log.filter(l=>l.back===null);
+  $("#nOut").textContent=o.length;
+  setHTML($("#outList"),o.length?o.map(l=>`<div class="card row"><div><b>${esc(l.n)}</b><small>${l.c} · salió a las ${fmtT(l.out)} · ${esc(l.p)}</small></div><div style="text-align:right"><div class="timer" data-out="${l.out}"></div><button class="btn" data-back="${l.id}">Ha vuelto</button></div></div>`).join(""):`<div class="empty">Nadie está fuera ahora mismo.</div>`);
+  tickOut();
+}
+function tickOut(){document.querySelectorAll("#outList .timer").forEach(t=>{const rem=Math.max(0,LIM*MIN-(now()-(+t.dataset.out))),s=Math.floor(rem/MIN)+":"+String(Math.floor(rem%MIN/1000)).padStart(2,"0");if(t.textContent!==s)t.textContent=s;t.classList.toggle("late",rem<=3*MIN)})}
+function bars(el,pairs,lim,skip){
+  const max=Math.max(1,...pairs.map(p=>p[1]));
+  $(el).innerHTML=pairs.length?pairs.map(([k,v])=>{const over=lim&&v>=lim&&!(skip&&skip[k]);return `<div class="bar ${over?"over":""}"><span>${esc(k)}</span><div class="track"><div class="fill ${over?"over":""}" style="width:${v/max*100}%"></div></div><span class="n">${v}</span></div>`}).join(""):`<div class="hint">Sin datos todavía.</div>`;
+}
+let histLoaded=false,histRows=[],histTotal=0,histShown=50,histReq=0;
+const fmtDF=t=>new Date(t).toLocaleDateString("es-ES",{day:"2-digit",month:"2-digit",year:"numeric"});
+const ymd=t=>{const d=new Date(t);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
+const dayMs=v=>{const [y,m,d]=v.split("-").map(Number);return new Date(y,m-1,d).getTime()};
+async function loadHist(){
+  const a=$("#hD").value,b=$("#hH").value,id=++histReq;
+  let d=a?dayMs(a):null,h=null;
+  if(b){const x=new Date(dayMs(b));x.setDate(x.getDate()+1);h=x.getTime()}
+  $("#hInfo").textContent="Cargando…";
+  try{const r=await srvJ("getHistorial",TOKEN,d,h);if(id!==histReq)return;if(!r)return logout();histRows=r.rows;histTotal=r.total;histShown=50;renderHist()}
+  catch(e){if(id===histReq)$("#hInfo").textContent="No se pudo cargar el historial. Inténtalo de nuevo."}
+}
+function renderHist(){
+  const n=histRows.length;
+  $("#hInfo").textContent=histTotal?`${histTotal} salida${histTotal===1?"":"s"}`+(histTotal>n?` (se muestran las ${n} más recientes)`:""):"No hay salidas en ese periodo.";
+  $("#hRows").innerHTML=histRows.slice(0,histShown).map(l=>`<tr><td>${esc(l.n)}</td><td>${esc(l.c)}</td><td>${fmtDF(l.out)}</td><td>${fmtT(l.out)}</td><td>${l.m===null?"fuera":l.m}</td><td>${esc(l.p)}</td><td>${l.p===ME||ADM?`<button class="btn ghost sm" data-hdel="${l.id}">Eliminar</button>`:""}</td></tr>`).join("");
+  $("#hMore").hidden=histShown>=n;
+}
+$("#hQ").onclick=e=>{const q=e.target.dataset.q;if(q===undefined)return;
+  if(q==="all"){$("#hD").value="";$("#hH").value=""}else{const x=new Date(now());$("#hH").value=ymd(x);x.setDate(x.getDate()-(+q));$("#hD").value=ymd(x)}
+  loadHist()};
+$("#hD").onchange=$("#hH").onchange=loadHist;
+$("#hMore").onclick=()=>{histShown+=100;renderHist()};
+/* ---- Resumen por día / semana / trimestre ---- */
+let TRI=[],SUM=null,sumReq=0,sumInit=false,P={m:"w",date:"",tri:0};
+const DOW=["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
+const monday=t=>{const d=new Date(t);d.setHours(0,0,0,0);d.setDate(d.getDate()-((d.getDay()+6)%7));return d};
+const midnight=t=>{const d=new Date(t);d.setHours(0,0,0,0);return d};
+function range(){
+  const base=P.date?new Date(dayMs(P.date)):new Date(now());
+  if(P.m==="d"){const a=midnight(base),b=new Date(a);b.setDate(b.getDate()+1);return [a.getTime(),b.getTime()]}
+  if(P.m==="w"){const a=monday(base),b=new Date(a);b.setDate(b.getDate()+7);return [a.getTime(),b.getTime()]}
+  const t=TRI[P.tri]||[0,0],a=midnight(t[0]),b=midnight(t[1]);b.setDate(b.getDate()+1);return [a.getTime(),b.getTime()]
+}
+function curTri(){const t=now();let i=TRI.findIndex(x=>x&&t>=x[0]&&t<x[1]+864e5);if(i<0){TRI.forEach((x,j)=>{if(x&&x[0]<=t)i=j})}return Math.max(0,i)}
+function label(){
+  const [a,b]=range(),e=b-864e5;
+  if(P.m==="d")return DOW[new Date(a).getDay()]+", "+new Date(a).toLocaleDateString("es-ES",{day:"numeric",month:"long",year:"numeric"});
+  if(P.m==="w")return "Semana del "+fmtDF(a)+" al "+fmtDF(e)+" (lunes a domingo)";
+  return (P.tri+1)+".º trimestre · "+fmtDF(a)+" – "+fmtDF(e)
+}
+function renderPick(){
+  $("#sMode").querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x.dataset.m===P.m));
+  $("#sDate").hidden=P.m==="t";$("#sTri").hidden=P.m!=="t";
+  $("#sDate").value=P.date;$("#sTri").value=P.tri;$("#sLbl").textContent=label();
+}
+function inCurrent(){const [a,b]=range(),t=now();return t>=a&&t<b}
+function shift(k){
+  if(P.m==="t"){let n=P.tri+k;while(TRI[n]===null)n+=k;if(TRI[n])P.tri=n}
+  else{const d=new Date(dayMs(P.date));d.setDate(d.getDate()+k*(P.m==="d"?1:7));P.date=ymd(d)}
+  renderPick();loadSum()
+}
+function initSum(){
+  if(sumInit)return;sumInit=true;
+  P={m:"w",date:ymd(now()),tri:curTri()};
+  $("#sTri").innerHTML=TRI.map((t,i)=>t?`<option value="${i}">${i+1}.º trimestre (${fmtDF(t[0])} – ${fmtDF(t[1])})</option>`:"").join("");
+  $("#sMode").querySelector('[data-m="t"]').disabled=!TRI.some(Boolean);
+  renderPick();loadSum();
+}
+async function loadSum(){
+  if(!TOKEN||!sumInit||(P.m==="t"&&!TRI[P.tri]))return;
+  const [a,b]=range(),id=++sumReq;$("#sInfo").textContent="Cargando…";
+  try{const r=await srvJ("getResumen",TOKEN,a,b);if(id!==sumReq)return;if(!r)return logout();SUM=r;renderSum()}
+  catch(e){if(id===sumReq)$("#sInfo").textContent="No se pudo cargar el resumen. Inténtalo de nuevo."}
+}
+function renderSum(){
+  if(!SUM)return;
+  const w=P.m==="w",lim=w?MAX:0,stu=SUM.stu||[];
+  $("#sInfo").textContent=SUM.tot?"":"No hay salidas en este periodo.";
+  $("#kA").textContent=SUM.tot;$("#kB").textContent=SUM.dist;$("#kC").textContent=SUM.min;
+  $("#limTxt").textContent=w?`Máximo semanal fijado por el centro: ${MAX} salidas (en rojo, quien lo alcanza).`:"";
+  const alc={};stu.forEach(([n,c,k])=>{if(k>=MAX&&!OBS[n])alc[c]=(alc[c]||0)+1});
+  $("#sHead").innerHTML="<tr><th>Curso</th><th>Salidas</th><th>Alumnos con salidas</th><th>Media por alumno</th>"+(w?"<th>Alcanzan el máximo</th>":"")+"</tr>";
+  const names=Object.keys(COURSES).filter(c=>SUM.cur[c]&&SUM.cur[c][0]>0);
+  $("#byCur").innerHTML=names.map(c=>{const [n,a]=SUM.cur[c],o=alc[c]||0;return `<tr><td>${esc(c)}</td><td>${n}</td><td>${a}</td><td>${(n/COURSES[c].length).toFixed(1)}</td>`+(w?`<td style="${o?"color:var(--warn);font-weight:700":""}">${o}</td>`:"")+"</tr>"}).join("")||`<tr><td colspan="${w?5:4}">Ningún curso tiene salidas en este periodo.</td></tr>`;
+  const sc=$("#sc").value||"all",by={};stu.forEach(([n,c,k])=>by[n]=k);
+  const pool=sc==="all"?stu.map(([n,c,k])=>[n,k]):(COURSES[sc]||[]).map(n=>[n,by[n]||0]);
+  bars("#byStu",pool.sort((a,b)=>b[1]-a[1]).slice(0,sc==="all"?10:99),lim,OBS);
+  const dia=SUM.dia||{};let pairs=[];
+  if(P.m==="w"){const a=new Date(range()[0]);for(let i=0;i<7;i++){const d=new Date(a);d.setDate(d.getDate()+i);pairs.push([DOW[d.getDay()].slice(0,3)+" "+d.getDate(),dia[ymd(d)]||0])}}
+  else if(P.m==="t"){const wk={};Object.entries(dia).forEach(([k,v])=>{const m=ymd(monday(dayMs(k)));wk[m]=(wk[m]||0)+v});pairs=Object.entries(wk).sort().map(([k,v])=>["Sem. "+fmtD(dayMs(k)),v])}
+  $("#dayBox").hidden=P.m==="d";$("#dayH").textContent=w?"Por día":"Por semana";bars("#byDay",pairs);
+  bars("#byHour",(SUM.hor||[]).map((v,i)=>[i+":00",v]).filter(p=>p[1]>0));
+}
+$("#sMode").onclick=e=>{const m=e.target.dataset.m;if(!m||e.target.disabled)return;P.m=m;renderPick();loadSum()};
+$("#sPrev").onclick=()=>shift(-1);$("#sNext").onclick=()=>shift(1);
+$("#sNow").onclick=()=>{P.date=ymd(now());P.tri=curTri();renderPick();loadSum()};
+$("#sDate").onchange=e=>{if(e.target.value){P.date=e.target.value;renderPick();loadSum()}};
+$("#sTri").onchange=e=>{P.tri=+e.target.value;renderPick();loadSum()};
+setInterval(()=>{if(TOKEN&&SUM&&!$("#sum").hidden&&!document.hidden&&inCurrent())loadSum()},60000);
+function refresh(){expire();renderGrid();renderOut();if(!$("#inc").hidden)renderInc();if(!$("#obs").hidden)renderObs();if(!$("#sum").hidden)renderSum()}
+function toast(msg,u){$("#tmsg").textContent=msg;$("#undo").hidden=!u;$("#toast").classList.add("on");clearTimeout(tt);tt=setTimeout(()=>$("#toast").classList.remove("on"),5000)}
+
+$("#chips").onclick=e=>{const c=e.target.dataset.c;if(c){course=c;$("#q").value="";renderChips();renderGrid()}};
+$("#q").oninput=renderGrid;
+
+function salida(n,c){
+  lastId="s"+Date.now()+Math.random().toString(36).slice(2,5);
+  const rec={id:lastId,n,c,p:ME,out:now(),back:null};log.push(rec);
+  const po={ack:0};pendOut.set(rec.id,po);
+  po.p=srv("registrarSalida",TOKEN,rec).then(r=>{po.ack=Date.now();if(r==="ya_fuera"||r==="ya_alumnado"){pendOut.delete(rec.id);log=log.filter(l=>l.id!==rec.id);refresh();toast(n.split(",")[0]+(r==="ya_alumnado"?" ya figura fuera (se ha apuntado el propio alumno)":" ya figura fuera (lo ha registrado otro profesor)"));syncFuera()}}).catch(e=>{pendOut.delete(rec.id);log=log.filter(l=>l.id!==rec.id);refresh();toast("No se pudo guardar. Inténtalo otra vez");throw e});
+  po.p.catch(()=>{});
+  toast("Salida registrada: "+n.split(",")[0],true);refresh();
+}
+$("#grid").onclick=e=>{
+  const b=e.target.closest(".stu");if(!b)return;
+  const n=b.dataset.n,c=b.dataset.c,hoy=log.filter(l=>l.n===n&&sameDay(l.out,now())).sort((a,b)=>a.out-b.out);
+  if(!hoy.length)return salida(n,c);
+  askWarn(n,hoy).then(ok=>{if(ok&&!outNow(n))salida(n,c)});
+};
+$("#undo").onclick=()=>{
+  const id=lastId;if(!id)return;
+  const pd={ack:0};pendDel.set(id,pd);log=log.filter(l=>l.id!==id);$("#toast").classList.remove("on");refresh();
+  after(id,()=>srv("deshacer",TOKEN,id)).then(()=>{pd.ack=Date.now()}).catch(()=>{pendDel.delete(id);toast("No se pudo deshacer");sync()});
+};
+$("#outList").onclick=e=>{
+  const id=e.target.dataset.back;if(!id)return;
+  const l=log.find(x=>x.id==id);if(!l)return;
+  const pb={t:now(),ack:0};l.back=pb.t;pendBack.set(id,pb);refresh();
+  after(id,()=>srv("registrarVuelta",TOKEN,id)).then(()=>{pb.ack=Date.now()}).catch(()=>{pendBack.delete(id);const x=log.find(z=>z.id===id);if(x)x.back=null;refresh();toast("No se pudo registrar la vuelta")});
+};
+$("#sc").onchange=renderSum;
+$("#iCand").onchange=e=>{const id=e.target.dataset.id;if(id)e.target.checked?sel.add(id):sel.delete(id)};
+$("#iT").oninput=$("#iW").onchange=renderInc;
+$("#iSave").onclick=()=>{
+  const names=[...new Set(cands().filter(l=>sel.has(l.id)).map(l=>l.n))];
+  const rec={id:"i"+now()+Math.random().toString(36).slice(2,5),t:incT(),p:ME,s:names,note:$("#iNote").value.trim().slice(0,200)};
+  inc.push(rec);sel.clear();$("#iNote").value="";$("#iT").value=nowHM();
+  const po={ack:0};pendOut.set(rec.id,po);
+  po.p=srv("registrarIncidencia",TOKEN,rec).then(()=>{po.ack=Date.now()}).catch(e=>{pendOut.delete(rec.id);inc=inc.filter(x=>x.id!==rec.id);refresh();toast("No se pudo guardar la incidencia. Inténtalo otra vez");throw e});
+  po.p.catch(()=>{});
+  toast("Incidencia registrada");refresh();
+};
+$("#iList").onclick=e=>{
+  const id=e.target.dataset.del;if(!id)return;
+  if(delArm!==id){delArm=id;e.target.textContent="¿Seguro?";clearTimeout(dt);dt=setTimeout(()=>{delArm=null;$("#iList")._h=null;renderInc()},4000);return}
+  const i=inc.find(x=>x.id===id);delArm=null;inc=inc.filter(x=>x!==i);
+  const pd={ack:0};pendDel.set(id,pd);
+  after(id,()=>srv("borrarIncidencia",TOKEN,id)).then(()=>{pd.ack=Date.now()}).catch(()=>{pendDel.delete(id);inc.push(i);refresh();toast("No se pudo eliminar la incidencia")});refresh();
+};
+$("#sc").innerHTML='<option value="all">Todos (los 10 con más salidas)</option>'+Object.keys(COURSES).map(c=>`<option>${c}</option>`).join("");
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll("nav button").forEach(x=>x.setAttribute("aria-selected",x===b));
+  if(b.dataset.t==="inc")$("#iT").value=nowHM();
+  ["reg","out","inc","obs","adm","sum","his"].forEach(s=>$("#"+s).hidden=s!==b.dataset.t);refresh();
+  if(b.dataset.t==="sum")loadSum();
+  if(b.dataset.t==="his"&&!histLoaded){histLoaded=true;$("#hQ").querySelector('[data-q="6"]').click()}
+});
+setInterval(()=>{const a=log.filter(l=>l.back===null).length;expire();if(log.filter(l=>l.back===null).length!==a)refresh();else if(!$("#out").hidden)tickOut()},1000);
+$("#login").addEventListener("focusout",()=>setTimeout(()=>{const a=document.activeElement;if(!a||!/^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName))window.scrollTo(0,0)},250));
+$("#lf").onsubmit=e=>{e.preventDefault();login()};
+document.querySelectorAll("#seg button").forEach(b=>b.onclick=()=>setAcc(b.dataset.u));
+$("#pSel").onchange=()=>{$("#u").value=$("#pSel").value;$("#err").textContent=""};$("#pSel").addEventListener("focus",cargarProfes);
+$("#eye").onmousedown=e=>e.preventDefault();
+$("#eye").onclick=()=>{const ver=$("#k").type==="password";$("#k").type=ver?"text":"password";$("#eye").setAttribute("aria-pressed",ver);$("#eye").setAttribute("aria-label",ver?"Ocultar contraseña":"Mostrar contraseña")};$("#bye").onclick=logout;
+/* Alumnado: apunta su salida con el código de baño (no da acceso a la aplicación) */
+let CID;try{CID=localStorage.cid||(localStorage.cid=Math.random().toString(36).slice(2,12)+Date.now().toString(36))}catch(e){CID=Math.random().toString(36).slice(2,12)}
+let aBusy=false,resT=0,resAt=0;
+const nom=s=>{s=String(s||"").replace(/\s*\([^)]*\)\s*$/,"");const i=s.indexOf(",");return i>0?s.slice(i+1).trim()+" "+s.slice(0,i).trim():s};
+function setLTab(w){document.querySelectorAll(".ltabs button").forEach(b=>b.setAttribute("aria-selected",b.dataset.w===w));$("#paPer").hidden=w!=="per";$("#paAlu").hidden=w!=="alu";$("#err").textContent="";$("#aErr").textContent="";if(w==="per")cargarProfes()}
+function closeRes(){clearTimeout(resT);$("#res").hidden=true}
+const IC_OK='<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M7.5 12.5l3 3 6-6.5"/></svg>',IC_NO='<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8 8l8 8M16 8l-8 8"/></svg>';
+const NO_MSG={noexiste:["Usuario no registrado","Este usuario no está registrado.","Un profesor debe registrarlo."],repetido:["Código repetido","Este código está asignado a más de una persona.","Avisa a un profesor."],bloqueo:["Demasiados intentos","Has probado demasiados códigos.","Espera unos minutos y vuelve a intentarlo."]};
+function showRes(r){
+  const ok=!!r.ok;let h;
+  if(ok)h=`${IC_OK}<h2>Registrado con éxito</h2><p class="rn">${esc(nom(r.n))}</p><p class="rc">${esc(r.c)}</p><div class="rs"><div><b>${r.hoy}</b><span>Salidas hoy</span></div><div><b>${r.sem}</b><span>Salidas esta semana</span></div></div><p class="rp">${r.prof?`Te ha dejado salir un profesor: <b>Sí</b> (${esc(nom(r.prof))})`:`Te ha dejado salir un profesor: <b>No</b>`}</p>`;
+  else{const m=NO_MSG[r.motivo]||NO_MSG.noexiste;h=`${IC_NO}<h2>${m[0]}</h2><p class="rm">${m[1]}</p><p class="rm"><b>${m[2]}</b></p>`}
+  $("#resIn").innerHTML=h+'<p class="rt">Esta pantalla se cierra sola · toca para cerrar</p>';
+  $("#res").className="res "+(ok?"ok":"no");$("#res").hidden=false;
+  const b=$("#resBar");b.style.animation="none";void b.offsetWidth;b.style.animation="";
+  clearTimeout(resT);resAt=Date.now();resT=setTimeout(closeRes,5000);
+}
+async function alumno(){
+  if(aBusy)return;const cod=$("#cod").value.trim();$("#aErr").textContent="";
+  if(!cod){$("#aErr").textContent="Escribe tu código de baño";$("#cod").focus();return}
+  aBusy=true;resetViewport();busy(true,"Comprobando código…");
+  try{const r=await srvJT(30000,"registrarAlumno",cod,CID);$("#cod").value="";showRes(r||{ok:false,motivo:"noexiste"})}
+  catch(e){$("#aErr").textContent="No se pudo registrar. Inténtalo de nuevo"}
+  finally{aBusy=false;busy(false)}
+}
+document.querySelectorAll(".ltabs button").forEach(b=>b.onclick=()=>setLTab(b.dataset.w));
+$("#af").onsubmit=e=>{e.preventDefault();alumno()};
+$("#res").onclick=()=>{if(Date.now()-resAt>800)closeRes()};
+$("#wNo").onclick=()=>closeWarn(false);$("#wOk").onclick=()=>closeWarn(true);
+$("#warn").onclick=e=>{if(e.target.id==="warn")closeWarn(false)};
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("#warn").hidden)closeWarn(false)});
+window.addEventListener("pageshow",e=>{if(e.persisted){entrando=false;aBusy=false;busy(false);if(TOKEN)sync()}});
+/* Observaciones */
+const rebuildObs=()=>{OBS={};obs.forEach(o=>{OBS[o.n]=true})};
+function fillSel(el,html){if(el._h===html)return;const v=el.value;el.innerHTML=html;el._h=html;if([...el.options].some(o=>o.value===v))el.value=v}
+function renderObs(){
+  const cs=Object.keys(COURSES);
+  fillSel($("#oC"),cs.map(c=>`<option>${esc(c)}</option>`).join(""));
+  const c=$("#oC").value||cs[0]||"";
+  fillSel($("#oA"),(COURSES[c]||[]).map(n=>`<option>${esc(n)}</option>`).join(""));
+  const q=$("#oQ").value.trim().toLowerCase();
+  const list=obs.filter(o=>!q||o.n.toLowerCase().includes(q)||o.x.toLowerCase().includes(q)).sort((a,b)=>b.t-a.t);
+  setHTML($("#oList"),list.length?list.map(o=>`<div class="card"><div class="row"><div><b>${esc(o.n)}</b><small>${esc(o.c)} · ${fmtDF(o.t)} · ${esc(o.p)}</small></div>${o.p===ME||ADM?`<button class="btn ghost sm" data-odel="${o.id}">Eliminar</button>`:""}</div><p class="otxt">${esc(o.x)}</p></div>`).join(""):`<div class="empty">${obs.length?"Ninguna observación coincide con la búsqueda.":"No hay observaciones registradas."}</div>`);
+}
+$("#oC").onchange=renderObs;$("#oQ").oninput=renderObs;
+$("#oSave").onclick=()=>{
+  const n=$("#oA").value,c=$("#oC").value,x=$("#oT").value.trim().slice(0,500);
+  if(!n){toast("Elige un alumno o alumna");return}
+  if(!x){toast("Escribe la observación");$("#oT").focus();return}
+  const rec={id:"o"+now()+Math.random().toString(36).slice(2,5),t:now(),n,c,p:ME,x};
+  obs.push(rec);rebuildObs();$("#oT").value="";
+  const po={ack:0};pendOut.set(rec.id,po);
+  po.p=srv("guardarObservacion",TOKEN,rec).then(()=>{po.ack=Date.now()}).catch(e=>{pendOut.delete(rec.id);obs=obs.filter(z=>z.id!==rec.id);rebuildObs();if(!$("#oT").value)$("#oT").value=x;refresh();toast("No se pudo guardar la observación. Inténtalo otra vez");throw e});
+  po.p.catch(()=>{});toast("Observación guardada");refresh();
+};
+$("#oList").onclick=async e=>{
+  const id=e.target.dataset.odel;if(!id)return;const o=obs.find(z=>z.id===id);if(!o)return;
+  if(!await ask("Eliminar observación",`<p>¿Eliminar la observación de <b>${esc(o.n)}</b>?</p><p class="otxt">${esc(o.x)}</p><p>No se puede deshacer.</p>`,"Eliminar"))return;
+  obs=obs.filter(z=>z!==o);rebuildObs();const pd={ack:0};pendDel.set(id,pd);refresh();
+  after(id,()=>srv("borrarObservacion",TOKEN,id)).then(()=>{pd.ack=Date.now()}).catch(()=>{pendDel.delete(id);obs.push(o);rebuildObs();refresh();toast("No se pudo eliminar la observación")});
+};
+/* Eliminar del historial los registros introducidos por uno mismo (con confirmación) */
+$("#hRows").onclick=async e=>{
+  const id=e.target.dataset.hdel;if(!id)return;const l=histRows.find(z=>z.id===id);if(!l)return;
+  if(!await ask("Eliminar registro",`<p>¿Eliminar este registro del historial?</p><p><b>${esc(l.n)}</b> · ${esc(l.c)}<br>${fmtDF(l.out)} a las ${fmtT(l.out)}<br>Registrado por: ${esc(l.p)}</p><p>No se puede deshacer.</p>`,"Eliminar"))return;
+  busy(true,"Eliminando…");
+  try{const r=await srvT(30000,"eliminarRegistro",TOKEN,id);
+    if(r==="ajeno"){toast("Solo puedes eliminar los registros que has introducido tú");return}
+    histRows=histRows.filter(z=>z.id!==id);histTotal=Math.max(0,histTotal-1);log=log.filter(z=>z.id!==id);pendDel.set(id,{ack:Date.now()});
+    renderHist();refresh();toast("Registro eliminado");if(!$("#sum").hidden)loadSum()}
+  catch(err){toast("No se pudo eliminar. Inténtalo de nuevo")}
+  finally{busy(false)}
+};
+/* Cambio de contraseña (no disponible para guardia ni conserjería) */
+let pwdBusy=false;
+function setPwdVis(v){["#pA","#pN","#pR"].forEach(s=>{$(s).type=v?"text":"password"})}
+function closePwd(){$("#pwd").hidden=true;$("#pf").reset();setPwdVis(false)}
+$("#pw").onclick=()=>{$("#pf").reset();setPwdVis(false);$("#pErr").textContent="";$("#pwd").hidden=false;$("#pA").focus()};
+$("#pNo").onclick=closePwd;$("#pwd").onclick=e=>{if(e.target.id==="pwd")closePwd()};
+$("#pShow").onchange=e=>setPwdVis(e.target.checked);
+$("#pf").onsubmit=async e=>{
+  e.preventDefault();if(pwdBusy)return;
+  const a=$("#pA").value,n=$("#pN").value,r2=$("#pR").value,er=$("#pErr");er.textContent="";
+  if(!a){er.textContent="Escribe tu contraseña actual";$("#pA").focus();return}
+  if(n.length<6){er.textContent="La nueva contraseña debe tener al menos 6 caracteres";$("#pN").focus();return}
+  if(n!==r2){er.textContent="Las dos contraseñas nuevas no coinciden";$("#pR").focus();return}
+  if(n===a){er.textContent="La nueva contraseña debe ser distinta de la actual";$("#pN").focus();return}
+  pwdBusy=true;$("#pOk").disabled=true;
+  try{const r=await srvT(30000,"cambiarClave",TOKEN,a,n);
+    if(r==="ok"){closePwd();toast("Contraseña cambiada")}
+    else er.textContent={actual:"La contraseña actual no es correcta",corta:"La nueva contraseña debe tener al menos 6 caracteres",igual:"La nueva contraseña debe ser distinta de la actual",bloqueo:"Demasiados intentos. Espera unos minutos",generico:"Este usuario compartido no puede cambiar su contraseña"}[r]||"No se pudo cambiar la contraseña"}
+  catch(err){er.textContent="No se pudo conectar. Inténtalo de nuevo"}
+  finally{pwdBusy=false;$("#pOk").disabled=false}
+};
+/* Administración: importar listas de Séneca (solo admin) */
+const ADMX={prof:{f:"#fP",b:"#bP",v:"#vP",cols:["Empleado/a","Usuario IdEA","DNI/Pasaporte"],t:"profesorado",fn:"RelPerCen.csv"},alu:{f:"#fA",b:"#bA",v:"#vA",cols:["Unidad","Alumno/a","Estado Matrícula"],t:"alumnado",fn:"RegAlum.csv"}};
+const PEND={};
+const normC=s=>String(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim().toLowerCase();
+function decodificar(buf){try{return new TextDecoder("utf-8",{fatal:true}).decode(buf)}catch(e){return new TextDecoder("windows-1252").decode(buf)}} // Séneca exporta en ISO-8859-1
+function parseCSV(t){
+  t=t.replace(/^\uFEFF/,"");
+  const l0=t.split(/\r?\n/,1)[0],sep=(l0.match(/;/g)||[]).length>(l0.match(/,/g)||[]).length?";":",";
+  const rows=[];let r=[],c="",q=false;
+  for(let i=0;i<t.length;i++){const ch=t[i];
+    if(q){if(ch==='"'){if(t[i+1]==='"'){c+='"';i++}else q=false}else c+=ch}
+    else if(ch==='"')q=true;
+    else if(ch===sep){r.push(c);c=""}
+    else if(ch==="\n"||ch==="\r"){if(ch==="\r"&&t[i+1]==="\n")i++;r.push(c);c="";if(r.some(x=>x!==""))rows.push(r);r=[]}
+    else c+=ch}
+  r.push(c);if(r.some(x=>x!==""))rows.push(r);return rows}
+const listaEj=a=>a&&a.length?`<ul class="ej">${a.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:"";
+function renderAdm(t,r,ap){
+  const L=[["Nuevos",r.nuevos,r.ej.nuevos],["Actualizados",r.actualizados,r.ej.actualizados],["Se quitan",r.bajas,r.ej.bajas],["Sin cambios",r.sinCambios],["No se importan",r.omitidos,r.ej.omitidos]];
+  const hay=r.nuevos+r.actualizados+r.bajas>0;
+  $(ADMX[t].v).innerHTML=`<p style="margin:12px 0 4px"><b>${ap?"✔ Cambios aplicados":"Vista previa · todavía no se ha cambiado nada"}</b></p><div class="scroll"><table class="admt"><tbody>${L.map(([a,n,e])=>`<tr><td>${a}</td><td><b>${n}</b>${listaEj(e)}</td></tr>`).join("")}</tbody></table></div>${(r.avisos||[]).map(x=>`<p class="avs">• ${esc(x)}</p>`).join("")}${ap?"":hay?`<button class="btn" type="button" data-adm-ap="${t}">Aplicar cambios</button>`:`<p class="hint">No hay cambios que aplicar.</p>`}`;
+}
+async function admEnviar(t,aplicar){
+  const k=ADMX[t];busy(true,aplicar?"Aplicando cambios…":"Revisando fichero…");
+  try{const r=await srvJT(60000,"adminImportar",TOKEN,t,PEND[t],aplicar,$(k.b).checked);
+    if(!r){logout();return}
+    renderAdm(t,r,aplicar);if(aplicar){delete PEND[t];$(k.f).value="";await sync()}}
+  catch(e){$(k.v).innerHTML=`<p class="err">${esc((e&&e.message)||"No se pudo completar. Inténtalo de nuevo")}</p>`}
+  finally{busy(false)}
+}
+async function admRevisar(t){
+  const k=ADMX[t],box=$(k.v),file=$(k.f).files[0];box.innerHTML="";
+  if(!file){box.innerHTML='<p class="err">Elige primero el fichero <b>'+k.fn+'</b></p>';return}
+  let rows;try{rows=parseCSV(decodificar(await file.arrayBuffer()))}catch(e){box.innerHTML='<p class="err">No se pudo leer el fichero</p>';return}
+  const head=(rows.shift()||[]).map(normC),idx=k.cols.map(c=>head.indexOf(normC(c))),falta=k.cols.find((c,i)=>idx[i]<0);
+  if(falta){box.innerHTML=`<p class="err">Este fichero no parece el de ${k.t}: falta la columna «${esc(falta)}». Debes adjuntar <b>${k.fn}</b>.</p>`;return}
+  PEND[t]=rows.map(r=>idx.map(i=>String(r[i]||"").trim()));
+  if(!PEND[t].length){box.innerHTML='<p class="err">El fichero no tiene datos</p>';return}
+  await admEnviar(t,false);
+}
+$("#adm").onclick=async e=>{
+  const r=e.target.dataset.admRev,a=e.target.dataset.admAp;
+  if(r)return admRevisar(r);
+  if(a){const q=$(ADMX[a].b).checked;
+    if(await ask("Aplicar cambios",`<p>Se va a actualizar la lista de <b>${ADMX[a].t}</b> con el fichero revisado.</p>${q?"<p>Se quitará a quien ya no figure en él.</p>":""}<p>Esta acción modifica la hoja de cálculo.</p>`,"Aplicar cambios"))admEnviar(a,true)}
+};
+$("#fP").onchange=()=>{$("#vP").innerHTML="";delete PEND.prof};$("#fA").onchange=()=>{$("#vA").innerHTML="";delete PEND.alu};
+$("#admLnk").onclick=()=>{setAcc("admin");$("#k").focus()};
+/* Logo del centro (el admin puede cambiarlo) */
+const LOGO_DEF="https:\x2F\x2Fiescampanillas.com\x2Fwp-content\x2Fuploads\x2F2025\x2F04\x2Fic-logo-335x263.jpg";
+let LOGO_CUR="";
+function setLogo(u){LOGO_CUR=u||"";document.querySelectorAll("img.logo").forEach(i=>{i.style.visibility="hidden";i.src=u||LOGO_DEF})}
+function logoErr(i){if(i.getAttribute("src")!==LOGO_DEF)i.src=LOGO_DEF;else i.style.visibility="hidden"}
+function probarImagen(u){return new Promise((ok,ko)=>{const im=new Image(),t=setTimeout(()=>{im.src="";ko()},12000);im.onload=()=>{clearTimeout(t);ok()};im.onerror=()=>{clearTimeout(t);ko()};im.referrerPolicy="no-referrer";im.src=u})}
+async function guardarLogo(restaurar){
+  const box=$("#vL"),raw=restaurar?"":$("#lUrl").value.trim();box.innerHTML="";
+  if(!restaurar&&!raw){box.innerHTML='<p class="err">Pega la dirección de la imagen (https:\x2F\x2F…)</p>';return}
+  busy(true,restaurar?"Restaurando logo…":"Comprobando imagen…");
+  try{
+    const a=await srvJT(30000,"adminLogo",TOKEN,raw,false);if(!a){logout();return}
+    if(a.url){try{await probarImagen(a.url)}catch(e){box.innerHTML='<p class="err">No se ha podido cargar esa imagen. Comprueba que la dirección es pública y que apunta directamente a una imagen (.png, .jpg…).</p>';return}}
+    const b=await srvJT(30000,"adminLogo",TOKEN,raw,true);if(!b){logout();return}
+    setLogo(b.url);$("#lUrl").value=b.url;box.innerHTML=`<p class="avs">✔ ${restaurar?"Logo original restaurado":"Logo actualizado"}.</p>`;toast(restaurar?"Logo original restaurado":"Logo actualizado");if(restaurar)$("#lUrl").value=""}
+  catch(e){box.innerHTML=`<p class="err">${esc((e&&e.message)||"No se pudo guardar. Inténtalo de nuevo")}</p>`}
+  finally{busy(false)}
+}
+$("#lSave").onclick=()=>guardarLogo(false);$("#lDef").onclick=()=>guardarLogo(true);
+srvT(15000,"getLogo").then(u=>setLogo(u)).catch(()=>setLogo(""));
+try{TOKEN=sessionStorage.getItem("tk")||""}catch(e){}
+if(TOKEN){busy(true,"Cargando…");sync().finally(()=>busy(false))}else show(false);
+setInterval(()=>{if(TOKEN)sync()},30000);
+setInterval(syncFuera,15000);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden&&TOKEN)sync()});
+</script>
+</body>
+</html>

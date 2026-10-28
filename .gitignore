@@ -1,0 +1,3 @@
+# Datos personales: no subas hojas de cálculo ni CSV de Séneca.
+*.csv
+*.xlsx
