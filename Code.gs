@@ -23,7 +23,10 @@ const FUERA_MIN = 15; // minutos máximos fuera: pasado ese tiempo se marca la v
 function onOpen() {
   SpreadsheetApp.getUi().createMenu('Registro de salidas')
     .addItem('Actualizar resúmenes', 'actualizarResumenes')
-    .addItem('Cargar datos de ejemplo (borra el registro)', 'generarDatosEjemplo').addToUi();
+    .addItem('Cargar datos de ejemplo (borra el registro)', 'generarDatosEjemplo')
+    .addSeparator()
+    .addItem('Cifrar las contraseñas existentes', 'cifrarClaves')
+    .addItem('Restablecer la contraseña del admin', 'restablecerAdmin').addToUi();
 }
 
 function doGet() {
@@ -46,7 +49,7 @@ function preparar() {
   const sa = ss.getSheetByName('Alumnos'); // hojas anteriores: añade la columna del código si falta
   if (!String(sa.getRange(1, 3).getValue()).trim()) sa.getRange(1, 3).setValue('Código de baño').setFontWeight('bold');
   sa.getRange('C:C').setNumberFormat('@'); // los códigos se guardan como texto (no pierden ceros a la izquierda)
-  crear('Profesores', [['Profesor', 'Usuario', 'Contraseña'], ['Apellidos, Nombre', 'usuario1', 'cambiar-clave']]);
+  crear('Profesores', [['Profesor', 'Usuario', 'Contraseña (cifrada)', 'DNI / Pasaporte'], ['Apellidos, Nombre', 'usuario1', cifrarClave_('cambiar-clave'), '']]);
   crear(CFG, [['Parámetro', 'Valor'], ['Máximo semanal', 4],
     ['Inicio 1.º trimestre', new Date(2026, 8, 15)], ['Fin 1.º trimestre', new Date(2026, 11, 22)],
     ['Inicio 2.º trimestre', new Date(2027, 0, 8)], ['Fin 2.º trimestre', new Date(2027, 2, 26)],
@@ -57,6 +60,7 @@ function preparar() {
   hojaFuera_();
   hojaInc_();
   hojaObs_();
+  asegurarColumnaDni_();
   crearAdmin();
   actualizarResumenes();
 }
@@ -118,15 +122,98 @@ function actualizarResumenes() {
   c.setFrozenRows(1);
 }
 
+// --- Contraseñas cifradas ------------------------------------------------
+// Se guardan como "sha256:sal:huella" (sal aleatoria por usuario). La contraseña en claro no se almacena en ningún sitio.
+function huella_(pw, sal) {
+  const b = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, sal + '|' + pw, Utilities.Charset.UTF_8);
+  return b.map(x => ('0' + (x & 255).toString(16)).slice(-2)).join('');
+}
+function cifrarClave_(pw) {
+  const sal = Utilities.getUuid().replace(/-/g, '').slice(0, 12);
+  return 'sha256:' + sal + ':' + huella_(String(pw), sal);
+}
+const esCifrada_ = g => /^sha256:[0-9a-f]{12}:[0-9a-f]{64}$/.test(String(g));
+// Acepta también contraseñas en claro: las escritas a mano en la hoja siguen valiendo tal cual y NO se cifran solas.
+// Solo se cifran cuando las guarda el sistema (cambio de contraseña, restablecer al DNI, persona nueva al importar) o con el menú.
+function claveCoincide_(guardada, pw) {
+  const g = String(guardada == null ? '' : guardada);
+  if (!g) return false;
+  if (esCifrada_(g)) { const p = g.split(':'); return huella_(String(pw), p[1]) === p[2]; }
+  return g === String(pw);
+}
+const DNI_RE_ = /^(\d{8}[A-Za-z]|[XYZxyz]\d{7}[A-Za-z])$/;
+
+// Cifra de golpe las contraseñas que estén en claro (solo se ejecuta si se pide desde el menú). Si la contraseña inicial era el DNI y no consta en la columna D, lo guarda ahí
+// (hace falta para poder restablecer la contraseña al DNI). Devuelve cuántas ha cifrado.
+function asegurarColumnaDni_() {
+  const sh = SpreadsheetApp.getActive().getSheetByName('Profesores');
+  if (sh && !String(sh.getRange(1, 4).getValue()).trim()) sh.getRange(1, 4).setValue('DNI / Pasaporte').setFontWeight('bold');
+}
+function cifrarClaves_() {
+  const sh = SpreadsheetApp.getActive().getSheetByName('Profesores');
+  if (!sh) return 0;
+  const v = sh.getDataRange().getValues();
+  if (!String(sh.getRange(1, 4).getValue()).trim()) sh.getRange(1, 4).setValue('DNI / Pasaporte').setFontWeight('bold');
+  if (String(sh.getRange(1, 3).getValue()).trim() === 'Contraseña') sh.getRange(1, 3).setValue('Contraseña (cifrada)');
+  let n = 0;
+  for (let i = 1; i < v.length; i++) {
+    const g = String(v[i][2] == null ? '' : v[i][2]);
+    if (!g || esCifrada_(g)) continue;
+    const u = String(v[i][1]).trim().toLowerCase();
+    if (!PROT_.includes(sinTildes_(u)) && !String(v[i][3] || '').trim() && DNI_RE_.test(g.trim())) sh.getRange(i + 1, 4).setNumberFormat('@').setValue(g.trim().toUpperCase());
+    sh.getRange(i + 1, 3).setNumberFormat('@').setValue(cifrarClave_(g));
+    n++;
+  }
+  return n;
+}
+function cifrarClaves() {
+  const n = conCerrojo_(cifrarClaves_);
+  const msg = n ? 'Se han cifrado ' + n + ' contraseña(s).' : 'Todas las contraseñas ya estaban cifradas.';
+  Logger.log(msg);
+  try { SpreadsheetApp.getUi().alert('Contraseñas', msg, SpreadsheetApp.getUi().ButtonSet.OK); } catch (e) {}
+}
+
+// El admin restablece la contraseña de un profesor a su DNI/Pasaporte (columna D de Profesores, que rellena la importación de Séneca).
+function adminProfesores(token) {
+  return enviar_(() => {
+    if (!quien_(token)) return null;
+    if (!esAdmin_(token)) throw new Error('Solo el administrador puede ver esta lista');
+    return SpreadsheetApp.getActive().getSheetByName('Profesores').getDataRange().getValues().slice(1)
+      .filter(r => String(r[1]).trim() && !PROT_.includes(sinTildes_(r[1])))
+      .map(r => ({ n: String(r[0]).trim() || String(r[1]).trim(), u: String(r[1]).trim(), dni: !!String(r[3] || '').trim() }))
+      .sort((a, b) => a.n.localeCompare(b.n, 'es'));
+  });
+}
+function adminRestablecerClave(token, usuario) {
+  return enviar_(() => {
+    if (!quien_(token)) return null;
+    if (!esAdmin_(token)) throw new Error('Solo el administrador puede restablecer contraseñas');
+    const u = String(usuario || '').trim().toLowerCase();
+    if (!u || PROT_.includes(sinTildes_(u))) throw new Error('Este usuario no se puede restablecer desde aquí');
+    return conCerrojo_(() => {
+      const sh = SpreadsheetApp.getActive().getSheetByName('Profesores'), v = sh.getDataRange().getValues();
+      const i = v.findIndex((r, k) => k > 0 && String(r[1]).trim().toLowerCase() === u);
+      if (i < 0) throw new Error('No se encuentra a ese usuario');
+      const dni = String(v[i][3] || '').trim();
+      if (!dni) throw new Error('No consta su DNI/Pasaporte. Importa el fichero de profesorado de Séneca (Administración) para registrarlo.');
+      sh.getRange(i + 1, 3).setNumberFormat('@').setValue(cifrarClave_(dni));
+      const cache = CacheService.getScriptCache();
+      cache.remove('f_' + u); cache.remove('fc_' + u); // quita bloqueos por intentos fallidos
+      return { ok: true, n: String(v[i][0]).trim() || u };
+    });
+  });
+}
+
 // --- Acceso -------------------------------------------------------------
 
 function entrar(usuario, clave) {
   const cache = CacheService.getScriptCache(), u = String(usuario).trim().toLowerCase();
   const fk = 'f_' + u, fallos = +cache.get(fk) || 0;
   if (!u || fallos >= 5) return null; // 5 fallos = bloqueo de 10 minutos
-  const fila = SpreadsheetApp.getActive().getSheetByName('Profesores').getDataRange().getValues().slice(1)
-    .find(r => String(r[1]).trim().toLowerCase() === u && String(r[2]) === String(clave));
-  if (!fila) { cache.put(fk, fallos + 1, 600); return null; }
+  const sp = SpreadsheetApp.getActive().getSheetByName('Profesores'), vp = sp.getDataRange().getValues();
+  const fi = vp.findIndex((r, i) => i > 0 && String(r[1]).trim().toLowerCase() === u && claveCoincide_(r[2], clave));
+  if (fi < 0) { cache.put(fk, fallos + 1, 600); return null; }
+  const fila = vp[fi];
   const token = Utilities.getUuid();
   cache.put('t_' + token, String(fila[0]).trim(), 21600); // sesión de 6 horas
   cache.put('u_' + token, u, 21600);
@@ -174,7 +261,12 @@ function registrarAlumno_(codigo, cid) {
     .filter(r => String(r[1]).trim() && codNorm_(r[2]) === cod);
   if (!hit.length) { cache.put(fk, fallos + 1, 300); return { ok: false, motivo: 'noexiste' }; }
   if (hit.length > 1) return { ok: false, motivo: 'repetido' };
-  const c = String(hit[0][0]).trim(), n = String(hit[0][1]).trim();
+  return salidaAlumno_(String(hit[0][0]).trim(), String(hit[0][1]).trim());
+}
+
+// Apunta la salida de un alumno (por código o por nombre) o, si ya figura fuera, solo devuelve la información
+function salidaAlumno_(c, n) {
+  const ss = SpreadsheetApp.getActive();
   return conCerrojo_(() => {
     const reg = ss.getSheetByName(REG), fs = hojaFuera_();
     const ya = estadoFuera_().find(x => x.n === n); // ¿ya figura fuera ahora mismo?
@@ -201,6 +293,46 @@ function registrarAlumno_(codigo, cid) {
   });
 }
 
+// Lista [curso, nombre] del alumnado, en caché 10 minutos (se invalida al importar): la búsqueda por nombre no lee la hoja cada vez.
+function listaAlu_() {
+  const cache = CacheService.getScriptCache(), g = cache.get('alu_l');
+  if (g) { try { return JSON.parse(g); } catch (e) { /* se vuelve a leer */ } }
+  const l = SpreadsheetApp.getActive().getSheetByName('Alumnos').getDataRange().getValues().slice(1)
+    .filter(r => String(r[1]).trim()).map(r => [String(r[0]).trim(), String(r[1]).trim(), String(r[2] == null ? '' : r[2]).trim()]);
+  const s = JSON.stringify(l);
+  if (s.length < 90000) cache.put('alu_l', s, 600);
+  return l;
+}
+
+// Para quien no recuerda su código: busca por nombre o apellido (mínimo 3 letras, 8 resultados, freno por dispositivo)
+function buscarAlumno(texto, cid) { return enviar_(() => buscarAlumno_(texto, cid)); }
+function buscarAlumno_(texto, cid) {
+  const toks = sinTildes_(texto).split(/[\s,]+/).filter(String);
+  if (!toks.length || toks.join('').length < 3) return { lista: [], corto: true };
+  const cache = CacheService.getScriptCache(), k = 'bs_' + String(cid || '').replace(/[^\w]/g, '').slice(0, 24), n = +cache.get(k) || 0;
+  if (n >= 150) return { lista: [], bloqueo: true };
+  cache.put(k, n + 1, 300);
+  const lista = [], l = listaAlu_();
+  for (let i = 0; i < l.length && lista.length < 9; i++) {
+    const h = sinTildes_(l[i][1]);
+    if (toks.every(t => h.indexOf(t) >= 0)) lista.push({ n: l[i][1], c: l[i][0], k: l[i][2] }); // k = código de baño (para que se lo aprenda)
+  }
+  return { lista: lista.slice(0, 8), mas: lista.length > 8 };
+}
+
+function registrarPorNombre(nombre, curso, cid) { return enviar_(() => registrarPorNombre_(nombre, curso, cid)); }
+function registrarPorNombre_(nombre, curso, cid) {
+  const n = lim_(nombre, 150), c = lim_(curso, 60);
+  const cache = CacheService.getScriptCache(), k = 'bs_' + String(cid || '').replace(/[^\w]/g, '').slice(0, 24), x = +cache.get(k) || 0;
+  if (x >= 150) return { ok: false, motivo: 'bloqueo' };
+  cache.put(k, x + 1, 300);
+  const hit = listaAlu_().filter(r => r[1] === n && r[0] === c);
+  if (hit.length !== 1) return { ok: false, motivo: 'noexiste' };
+  const res = salidaAlumno_(c, n);
+  res.cod = hit[0][2]; // se le muestra su código también al entrar por nombre
+  return res;
+}
+
 const sinTildes_ = s => String(s).trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 function usuarioDe_(token) { return token ? (CacheService.getScriptCache().get('u_' + token) || '') : ''; }
 function esGenerico_(token) { return GENERICOS_.includes(sinTildes_(usuarioDe_(token))); }
@@ -224,9 +356,9 @@ function cambiarClave(token, actual, nueva) {
       if (u ? String(v[k][1]).trim().toLowerCase() === u : String(v[k][0]).trim() === me) i = k;
     if (i < 0) throw new Error('Usuario no encontrado');
     if (GENERICOS_.includes(sinTildes_(v[i][1]))) return 'generico';
-    if (String(v[i][2]) !== String(actual)) { cache.put(fk, fallos + 1, 600); return 'actual'; }
+    if (!claveCoincide_(v[i][2], actual)) { cache.put(fk, fallos + 1, 600); return 'actual'; }
     if (String(actual) === nueva) return 'igual';
-    sh.getRange(i + 1, 3).setNumberFormat('@').setValue(nueva);
+    sh.getRange(i + 1, 3).setNumberFormat('@').setValue(cifrarClave_(nueva));
     cache.remove(fk);
     return 'ok';
   });
@@ -650,8 +782,21 @@ function crearAdmin_() {
   if (sh.getDataRange().getValues().slice(1).some(r => sinTildes_(r[1]) === 'admin')) return null;
   const pw = Utilities.getUuid().replace(/-/g, '').slice(0, 10), r0 = sh.getLastRow() + 1;
   sh.getRange(r0, 3).setNumberFormat('@');
-  sh.getRange(r0, 1, 1, 3).setValues([['Administración', 'admin', pw]]);
+  sh.getRange(r0, 1, 1, 3).setValues([['Administración', 'admin', cifrarClave_(pw)]]);
   return pw;
+}
+
+// Si se olvida la contraseña del admin (ya no se puede leer en la hoja): ejecutar desde el editor o desde el menú.
+function restablecerAdmin() {
+  const sh = SpreadsheetApp.getActive().getSheetByName('Profesores'), v = sh.getDataRange().getValues();
+  const i = v.findIndex((r, k) => k > 0 && sinTildes_(r[1]) === 'admin');
+  let nueva = Utilities.getUuid().replace(/-/g, '').slice(0, 10);
+  if (i < 0) nueva = crearAdmin_();
+  else sh.getRange(i + 1, 3).setNumberFormat('@').setValue(cifrarClave_(nueva));
+  if (nueva) {
+    Logger.log('Nueva contraseña del admin: ' + nueva);
+    try { SpreadsheetApp.getUi().alert('Contraseña del admin restablecida', 'Usuario: admin\nNueva contraseña: ' + nueva + '\n\nSe muestra una sola vez; en la hoja queda guardada cifrada. Cámbiala al entrar (botón "Contraseña").', SpreadsheetApp.getUi().ButtonSet.OK); } catch (e) {}
+  }
 }
 
 // Código de baño: 1.ª letra del nombre + 3 del 1.er apellido + 3 del 2.º (minúsculas, sin tildes y sin partículas "de, la…")
@@ -688,7 +833,7 @@ function impProf_(filas, aplicar, borrar) {
   const sh = SpreadsheetApp.getActive().getSheetByName('Profesores'), v = sh.getDataRange().getValues();
   const u2i = new Map();
   for (let i = 1; i < v.length; i++) { const u = String(v[i][1]).trim().toLowerCase(); if (u && !u2i.has(u)) u2i.set(u, i); }
-  const vistos = new Set(), nuevos = [], act = [], omit = [], avisos = [];
+  const vistos = new Set(), nuevos = [], act = [], omit = [], avisos = [], dnis = [];
   let igual = 0, dup = 0;
   filas.forEach(f => {
     const n = lim_(f[0], 150), u = lim_(f[1], 60).toLowerCase(), d = lim_(f[2], 40);
@@ -698,9 +843,12 @@ function impProf_(filas, aplicar, borrar) {
     const i = u2i.get(u);
     if (i === undefined) {
       if (!d) { omit.push(n + ' (sin DNI/Pasaporte)'); return; }
-      nuevos.push([n, u, d]);
-    } else if (String(v[i][0]).trim() !== n) act.push({ i, n, antes: String(v[i][0]).trim() });
-    else igual++;
+      nuevos.push([n, u, cifrarClave_(d), d.toUpperCase()]);
+    } else {
+      if (String(v[i][3] || '').trim().toUpperCase() !== d.toUpperCase() && d) dnis.push({ i, d: d.toUpperCase() });
+      if (String(v[i][0]).trim() !== n) act.push({ i, n, antes: String(v[i][0]).trim() });
+      else igual++;
+    }
     vistos.add(u);
   });
   if (!vistos.size) throw new Error('El fichero no contiene profesorado importable');
@@ -710,17 +858,20 @@ function impProf_(filas, aplicar, borrar) {
     if (u && !PROT_.includes(sinTildes_(u)) && !vistos.has(u)) bajas.push(i);
   }
   if (dup) avisos.push(dup + ' fila(s) repetida(s) en el fichero (se usa la primera).');
-  if (nuevos.length) avisos.push('A las personas nuevas se les asigna su DNI/Pasaporte como contraseña inicial; a quien ya existía no se le cambia la contraseña.');
+  if (nuevos.length) avisos.push('A las personas nuevas se les asigna su DNI/Pasaporte como contraseña inicial (guardada cifrada); a quien ya existía no se le cambia la contraseña.');
+  if (dnis.length) avisos.push('Se anota el DNI/Pasaporte de ' + dnis.length + ' persona(s) que ya existían (columna D de Profesores), solo para poder restablecer su contraseña. No se cambia ninguna contraseña.');
   if (aplicar) {
+    if (!String(sh.getRange(1, 4).getValue()).trim()) sh.getRange(1, 4).setValue('DNI / Pasaporte').setFontWeight('bold');
+    dnis.forEach(x => sh.getRange(x.i + 1, 4).setNumberFormat('@').setValue(x.d));
     act.forEach(a => sh.getRange(a.i + 1, 1).setValue(a.n));
     bajas.slice().reverse().forEach(i => sh.deleteRow(i + 1));
     if (nuevos.length) {
       const r0 = sh.getLastRow() + 1;
-      sh.getRange(r0, 3, nuevos.length, 1).setNumberFormat('@');
-      sh.getRange(r0, 1, nuevos.length, 3).setValues(nuevos);
+      sh.getRange(r0, 3, nuevos.length, 2).setNumberFormat('@');
+      sh.getRange(r0, 1, nuevos.length, 4).setValues(nuevos);
     }
   }
-  return { aplicado: aplicar, nuevos: nuevos.length, actualizados: act.length, bajas: bajas.length, sinCambios: igual, omitidos: omit.length,
+  return { aplicado: aplicar, nuevos: nuevos.length, actualizados: act.length, dnis: dnis.length, bajas: bajas.length, sinCambios: igual, omitidos: omit.length,
     ej: { nuevos: nuevos.slice(0, 6).map(x => x[0]), actualizados: act.slice(0, 6).map(a => a.antes + ' → ' + a.n),
           bajas: bajas.slice(0, 8).map(i => String(v[i][0]).trim() || String(v[i][1])), omitidos: omit.slice(0, 6) }, avisos };
 }
@@ -761,6 +912,7 @@ function impAlu_(filas, aplicar, borrar) {
   avisos.push(conFormula ? 'La columna C (código de baño) tiene una fórmula: no se modifica. Si es una fórmula por fila, arrástrala hasta el final.'
                          : 'A cada alumno nuevo se le genera su código de baño; los que ya existían conservan el suyo.');
   if (aplicar) {
+    CacheService.getScriptCache().remove('alu_l'); // lista cacheada de la búsqueda por nombre
     const lista = [];
     fin.forEach((c, n) => lista.push([c, n]));
     if (!borrar) ex.forEach((e, n) => { if (!fin.has(n)) lista.push([e.c, n]); });
@@ -833,4 +985,103 @@ function adminLogo(token, url, aplicar) {
     });
     return { url: u };
   });
+}
+
+
+// --- Ficha de un alumno ---------------------------------------------------
+// Resumen completo de un alumno: cuántas veces ha salido, cuándo, cuánto tarda, incidencias y observaciones. Para cualquier usuario con sesión.
+function getFicha(token, nombre) { return enviar_(() => getFicha_(token, nombre)); }
+function getFicha_(token, nombre) {
+  if (!quien_(token)) return null;
+  const n = String(nombre || '').trim().slice(0, 200);
+  if (!n) throw new Error('Falta el alumno');
+  const ss = SpreadsheetApp.getActive(), tz = ss.getSpreadsheetTimeZone(), ahora = Date.now();
+  const al = ss.getSheetByName('Alumnos').getDataRange().getValues().slice(1).find(r => String(r[1]).trim() === n);
+  const t0 = inicioDia_(tz, ahora), u = +Utilities.formatDate(new Date(ahora), tz, 'u');
+  const s0 = inicioDia_(tz, t0 + 12 * 36e5 - (u - 1) * 864e5);
+  const m0 = Utilities.parseDate(Utilities.formatDate(new Date(ahora), tz, 'yyyy-MM') + '-01 00:00:00', tz, 'yyyy-MM-dd HH:mm:ss').getTime();
+  const cv = ss.getSheetByName(CFG).getRange('B3:B8').getValues().map(r => r[0]);
+  const tri = [0, 1, 2].map(i => cv[2 * i] instanceof Date && cv[2 * i + 1] instanceof Date ? [cv[2 * i].getTime(), cv[2 * i + 1].getTime() + 864e5] : null);
+  const cur0 = tri[0] && tri[2] ? [tri[0][0], tri[2][1]] : null;
+  const max = Number(ss.getSheetByName(CFG).getRange('B2').getValue()) || 4;
+  const mios = ss.getSheetByName(REG).getDataRange().getValues().slice(1).filter(r => r[0] && String(r[2]).trim() === n)
+    .map(r => {
+      const out = ms_(r, 7, 1), mm = r[6] !== '' && r[6] !== null && !isNaN(Number(r[6])) ? Number(r[6]) : null;
+      return { id: String(r[0]), out, p: String(r[4]), m: mm !== null ? mm : (ahora - out >= FUERA_MIN * 60000 ? FUERA_MIN : null) };
+    }).filter(x => x.out > 0).sort((a, b) => b.out - a.out);
+  const cnt = (a, b) => mios.filter(x => x.out >= a && x.out < b).length;
+  const dow = [0, 0, 0, 0, 0, 0, 0], hor = new Array(24).fill(0), dias = {}, semanas = {};
+  let suma = 0, nm = 0, porAlu = 0, maxDia = 0;
+  mios.forEach(x => {
+    const d = new Date(x.out), k = Utilities.formatDate(d, tz, 'yyyy-MM-dd');
+    dow[+Utilities.formatDate(d, tz, 'u') - 1]++;
+    hor[+Utilities.formatDate(d, tz, 'H')]++;
+    dias[k] = (dias[k] || 0) + 1; if (dias[k] > maxDia) maxDia = dias[k];
+    const wk = inicioDia_(tz, inicioDia_(tz, x.out) + 12 * 36e5 - (+Utilities.formatDate(d, tz, 'u') - 1) * 864e5);
+    semanas[wk] = (semanas[wk] || 0) + 1;
+    if (x.m !== null) { suma += x.m; nm++; }
+    if (x.p === ALU_) porAlu++;
+  });
+  const ult = []; // últimas 10 semanas (de la más antigua a la actual)
+  for (let i = 9; i >= 0; i--) { const w = inicioDia_(tz, s0 + 12 * 36e5 - i * 7 * 864e5); ult.push([w, semanas[w] || 0]); }
+  const wmax = Object.keys(semanas).filter(w => semanas[w] >= max).length;
+  const si = ss.getSheetByName(INC), so = ss.getSheetByName(OBS);
+  const inc = si ? si.getDataRange().getValues().slice(1).filter(r => r[0] && r[1] instanceof Date && String(r[3]).split(' | ').indexOf(n) >= 0)
+    .map(r => ({ t: r[1].getTime(), p: String(r[2]), note: String(r[4] || '') })).sort((a, b) => b.t - a.t) : [];
+  const obs = so ? so.getDataRange().getValues().slice(1).filter(r => r[0] && String(r[2]).trim() === n)
+    .map(r => ({ t: r[1] instanceof Date ? r[1].getTime() : 0, p: String(r[4]), x: String(r[5] || '') })).sort((a, b) => b.t - a.t) : [];
+  return { n, c: al ? String(al[0]).trim() : (mios[0] ? '' : ''), existe: !!al, max,
+    hoy: cnt(t0, Infinity), sem: cnt(s0, Infinity), mes: cnt(m0, Infinity), tri: tri.map(t => t ? cnt(t[0], t[1]) : null),
+    cur: cur0 ? cnt(cur0[0], cur0[1]) : mios.length, tot: mios.length, dias: Object.keys(dias).length, maxDia,
+    media: nm ? Math.round(suma / nm * 10) / 10 : 0, minTot: suma, semMax: wmax, porAlu, dow, hor, ult,
+    lista: mios.slice(0, 30), inc: inc.slice(0, 20), nInc: inc.length, obs: obs.slice(0, 20) };
+}
+
+// --- Borrar el historial anterior a una fecha ------------------------------------
+// Para empezar un curso nuevo o limpiar: quita de Registro e Incidencias (y, si se pide, Observaciones) todo lo anterior al día elegido
+// (el día elegido no se borra). aplicar=false → solo cuenta lo que se borraría.
+function adminBorrarAntes(token, fecha, aplicar, conObs) {
+  return enviar_(() => {
+    if (!quien_(token)) return null;
+    if (!esAdmin_(token)) throw new Error('Solo el administrador puede borrar datos');
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(fecha))) throw new Error('Elige una fecha válida');
+    const tz = SpreadsheetApp.getActive().getSpreadsheetTimeZone();
+    const corte = Utilities.parseDate(String(fecha) + ' 00:00:00', tz, 'yyyy-MM-dd HH:mm:ss').getTime();
+    if (corte > inicioDia_(tz, Date.now())) throw new Error('La fecha no puede ser posterior a hoy');
+    return conCerrojo_(() => borrarAntes_(corte, !!aplicar, !!conObs, String(fecha)));
+  });
+}
+function reescribirHoja_(sh, filas, ncol) {
+  const ult = sh.getLastRow();
+  if (ult > 1) sh.getRange(2, 1, ult - 1, ncol).clearContent();
+  if (filas.length) sh.getRange(2, 1, filas.length, ncol).setValues(filas);
+}
+function borrarAntes_(corte, aplicar, conObs, fecha) {
+  const ss = SpreadsheetApp.getActive(), reg = ss.getSheetByName(REG);
+  const parte = (sh, ncol, msDe) => { // separa lo que se queda de lo que se borra
+    const quedan = [], borran = [];
+    if (!sh) return { quedan, borran };
+    sh.getDataRange().getValues().slice(1).forEach(r => {
+      if (!r[0]) return;
+      const t = msDe(r), fila = r.slice(0, ncol);
+      while (fila.length < ncol) fila.push('');
+      (t > 0 && t < corte ? borran : quedan).push(fila);
+    });
+    return { quedan, borran };
+  };
+  const R = parte(reg, 8, r => ms_(r, 7, 1));
+  const I = parte(ss.getSheetByName(INC), 5, r => r[1] instanceof Date ? r[1].getTime() : 0);
+  const O = conObs ? parte(ss.getSheetByName(OBS), 6, r => r[1] instanceof Date ? r[1].getTime() : 0) : { quedan: [], borran: [] };
+  if (aplicar) {
+    if (R.borran.length) {
+      reescribirHoja_(reg, R.quedan, 8);
+      const ids = new Set(R.borran.map(r => String(r[0]))), fs = hojaFuera_();
+      const fv = fs.getDataRange().getValues();
+      for (let i = fv.length - 1; i >= 1; i--) if (ids.has(String(fv[i][0]))) fs.deleteRow(i + 1);
+    }
+    if (I.borran.length) reescribirHoja_(ss.getSheetByName(INC), I.quedan, 5);
+    if (O.borran.length) reescribirHoja_(ss.getSheetByName(OBS), O.quedan, 6);
+    Logger.log('Borrado anterior a ' + fecha + ': ' + R.borran.length + ' salidas, ' + I.borran.length + ' incidencias, ' + O.borran.length + ' observaciones.');
+  }
+  return { aplicado: aplicar, fecha, salidas: R.borran.length, incidencias: I.borran.length, observaciones: O.borran.length, quedan: R.quedan.length };
 }

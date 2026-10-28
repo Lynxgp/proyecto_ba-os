@@ -177,6 +177,21 @@ textarea:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .ej{margin:4px 0 8px 18px;padding:0;font-size:13px;color:var(--muted)}
 .avs{font-size:13px;color:var(--muted);margin:8px 0}
 input[type=file]{font:inherit;font-size:15px;max-width:100%;margin:6px 0}
+
+.mbox.f{border-color:var(--accent);width:min(94vw,580px)}.mbox.f h3{color:var(--text);margin:0;font-size:20px}
+.fh{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.fk{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}
+.fk .kpi b{font-size:22px}.fk .kpi.al b{color:var(--warn)}
+@media (max-width:480px){.fk{grid-template-columns:repeat(2,1fr)}}
+.fs{font-size:15px;margin:14px 0 4px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.lk{cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px}
+.lk:hover{color:var(--accent)}
+.fi{flex:none;display:inline-grid;place-items:center;min-width:32px;height:32px;border-radius:50%;border:1.5px solid var(--line);color:var(--accent);font-weight:700;font-size:14px;background:var(--card)}
+.rl{display:grid;gap:8px;margin-top:8px;text-align:left}
+#bus{text-align:left;margin-top:6px}
+.dng{background:var(--warn);color:#fff}
+.sel{width:100%;background:var(--card);color:var(--text);border:1.5px solid var(--line);border-radius:8px;padding:6px}
+.fl td{white-space:normal}
 </style>
 </head>
 <body>
@@ -192,7 +207,10 @@ input[type=file]{font:inherit;font-size:15px;max-width:100%;margin:6px 0}
 <div id="paAlu" hidden><p class="hint">Escribe tu código de baño para apuntar tu salida. Esta opción no da acceso a la aplicación.</p>
 <form id="af" autocomplete="off"><label for="cod">Código de baño</label><input type="text" id="cod" placeholder="Ejemplo: mlozvid" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" maxlength="40">
 <div class="note" id="codNote"><b>¿Cómo es tu código?</b><br>1.ª letra de tu nombre + 3 primeras letras de tu 1.er apellido + 3 primeras letras de tu 2.º apellido, todo en minúsculas y sin tildes.<br>Ejemplo: <b>Lozano Vidal, Marcos</b> → <code>mlozvid</code><br><small>Si el apellido es «De la Cruz», se usa «cru». Si no te funciona, pregunta a un profesor.</small></div>
-<button class="btn" type="submit" id="aGo">Registrar salida</button></form><div class="err" id="aErr" role="alert"></div></div>
+<button class="btn" type="submit" id="aGo">Registrar salida</button></form><div class="err" id="aErr" role="alert"></div>
+<button class="lnk" type="button" id="tBus" aria-expanded="false">¿No recuerdas tu código? Busca tu nombre</button>
+<div id="bus" hidden><label for="q2">Escribe tu nombre o tus apellidos</label><input type="text" id="q2" placeholder="Por ejemplo: García Pablo" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" maxlength="60">
+<div class="rl" id="rl"></div><p class="hint" id="rh"></p></div></div>
 <p class="lic">© 2026 IES Campanillas (Málaga) · Software libre · <a href="https://www.gnu.org/licenses/gpl-3.0.html" target="_blank" rel="noopener">Licencia GNU GPL v3</a></p></div></div>
 <div class="busy" id="busy" hidden role="status" aria-live="polite"><div class="busy-in"><svg class="tap" viewBox="0 0 120 120" aria-hidden="true"><path class="basin" d="M18 86H102Q102 112 60 112Q18 112 18 86Z"/><path class="stem" d="M54 21V27"/><rect class="handle" x="43" y="16" width="22" height="5" rx="2.5"/><path class="pipe" d="M34 86V46a16 16 0 0 1 16-16H68a12 12 0 0 1 12 12V46"/><ellipse class="rip r1" cx="80" cy="92" rx="16" ry="3.5"/><ellipse class="rip r2" cx="80" cy="92" rx="16" ry="3.5"/><path class="drop" d="M80 52C77 57 74 61 74 64a6 6 0 0 0 12 0C86 61 83 57 80 52Z"/></svg><p id="busyTxt">Cargando…</p></div></div>
 <div class="wrap" id="app" hidden>
@@ -247,7 +265,7 @@ input[type=file]{font:inherit;font-size:15px;max-width:100%;margin:6px 0}
   <div class="card">
     <h2 style="margin-top:0">Profesorado</h2>
     <p class="fn">Fichero que debes adjuntar: <code>RelPerCen.csv</code></p>
-    <p class="hint">Se usan las columnas <b>Empleado/a</b>, <b>Usuario IdEA</b> y <b>DNI/Pasaporte</b> (contraseña inicial de quien se añada).</p>
+    <p class="hint">Se usan las columnas <b>Empleado/a</b>, <b>Usuario IdEA</b> y <b>DNI/Pasaporte</b> (contraseña inicial de quien se añada; se guarda cifrada y el DNI se anota aparte para poder restablecer contraseñas).</p>
     <input type="file" id="fP" accept=".csv,text/csv">
     <label class="cand" style="border:0"><input type="checkbox" id="bP" checked><span>Quitar a quien ya no figure en el fichero<small>Guardia, conserjería y admin nunca se quitan.</small></span></label>
     <button class="btn ghost" type="button" data-adm-rev="prof">Revisar cambios</button>
@@ -261,6 +279,23 @@ input[type=file]{font:inherit;font-size:15px;max-width:100%;margin:6px 0}
     <label class="cand" style="border:0"><input type="checkbox" id="bA" checked><span>Quitar a quien ya no figure en el fichero<small>Su historial y sus observaciones se conservan.</small></span></label>
     <button class="btn ghost" type="button" data-adm-rev="alu">Revisar cambios</button>
     <div id="vA"></div>
+  </div>
+  <div class="card">
+    <h2 style="margin-top:0">Contraseñas del profesorado</h2>
+    <p class="hint">Las contraseñas se guardan cifradas: nadie puede leerlas en la hoja. Si alguien olvida la suya, restablécela: volverá a ser su <b>DNI/Pasaporte</b> (el de Séneca) y podrá cambiarla al entrar.</p>
+    <input type="text" class="search" id="rQ" placeholder="Buscar profesor o profesora" autocomplete="off">
+    <select class="sel" id="rS" size="6" aria-label="Profesorado"></select>
+    <p class="hint" id="rI"></p>
+    <button class="btn" type="button" id="rGo" disabled>Restablecer al DNI</button>
+    <div id="vR"></div>
+  </div>
+  <div class="card">
+    <h2 style="margin-top:0">Borrar historial antiguo</h2>
+    <p class="hint">Borra todas las salidas e incidencias <b>anteriores</b> a la fecha elegida (esa fecha no se borra). Sirve para empezar un curso nuevo. <b>No se puede deshacer</b>: antes conviene guardar una copia de la hoja de cálculo (Archivo → Hacer una copia).</p>
+    <label class="limit">Borrar todo lo anterior al <input type="date" id="xD"></label>
+    <label class="cand" style="border:0"><input type="checkbox" id="xO"><span>Borrar también las observaciones anteriores<small>Por defecto se conservan.</small></span></label>
+    <button class="btn ghost" type="button" id="xRev">Calcular qué se borraría</button>
+    <div id="vX"></div>
   </div>
   <div class="card">
     <h2 style="margin-top:0">Logo</h2>
@@ -299,6 +334,7 @@ input[type=file]{font:inherit;font-size:15px;max-width:100%;margin:6px 0}
 <p class="lic">© 2026 IES Campanillas (Málaga) · Software libre · <a href="https://www.gnu.org/licenses/gpl-3.0.html" target="_blank" rel="noopener">Licencia GNU GPL v3</a></p>
 </div>
 <div class="modal" id="warn" hidden role="alertdialog" aria-modal="true" aria-labelledby="wT"><div class="mbox"><h3 id="wT">⚠ Salida repetida</h3><div id="wP"></div><div class="acts"><button class="btn ghost" type="button" id="wNo">Cancelar</button><button class="btn" type="button" id="wOk">Registrar de todos modos</button></div></div></div>
+<div class="modal" id="ficha" hidden role="dialog" aria-modal="true" aria-labelledby="fN"><div class="mbox f"><div class="fh"><div><h3 id="fN"></h3><div class="hint" id="fC" style="margin:2px 0 0"></div></div><button class="btn ghost sm" id="fX" type="button">Cerrar</button></div><div id="fB"></div></div></div>
 <div class="modal" id="pwd" hidden role="dialog" aria-modal="true" aria-labelledby="pT"><div class="mbox n"><h3 id="pT">Cambiar contraseña</h3>
 <form id="pf" autocomplete="off"><label for="pA">Contraseña actual</label><input type="password" id="pA" autocomplete="current-password">
 <label for="pN">Nueva contraseña (mínimo 6 caracteres)</label><input type="password" id="pN" autocomplete="new-password">
@@ -439,18 +475,18 @@ function renderGrid(){
   const list=q?Object.entries(COURSES).flatMap(([c,a])=>a.map(n=>[n,c])).filter(([n])=>n.toLowerCase().includes(q)||(CODES[n]||"").toLowerCase().includes(q)):COURSES[course].map(n=>[n,course]);
   setHTML($("#grid"),list.length?list.map(([n,c])=>{
     const o=outNow(n),k=W[n]||0,ex=(H[n]?` · <span class="warnb">hoy: ${H[n]}×</span>`:"")+(IC[n]?` · <span class="warnb">⚠ ${IC[n]} incid.</span>`:"");
-    return `<button class="stu ${OBS[n]?"lv-b":lvl(k)}" data-n="${esc(n)}" data-c="${c}" ${o?"disabled":""}><span>${esc(n)} (${k})${OBS[n]?`<b class="exc" aria-label="Tiene observaciones">!</b>`:""}<br><small>${c}${CODES[n]?` · <code class="cd">${esc(CODES[n])}</code>`:""}${ex}</small></span>${o?`<span class="tag">Fuera desde ${fmtT(o.out)}</span>`:""}</button>`}).join(""):`<div class="empty">Ningún alumno coincide con la búsqueda.</div>`);
+    return `<button class="stu ${OBS[n]?"lv-b":lvl(k)}" data-n="${esc(n)}" data-c="${c}" ${o?"disabled":""}><span>${esc(n)} (${k})${OBS[n]?`<b class="exc" aria-label="Tiene observaciones">!</b>`:""}<br><small>${c}${CODES[n]?` · <code class="cd">${esc(CODES[n])}</code>`:""}${ex}</small></span>${o?`<span class="tag">Fuera desde ${fmtT(o.out)}</span>`:""}<span class="fi" data-f="${esc(n).replace(/"/g,"&quot;")}" role="button" aria-label="Ver ficha de ${esc(n).replace(/"/g,"&quot;")}" title="Ver ficha">i</span></button>`}).join(""):`<div class="empty">Ningún alumno coincide con la búsqueda.</div>`);
 }
 function renderOut(){
   const o=log.filter(l=>l.back===null);
   $("#nOut").textContent=o.length;
-  setHTML($("#outList"),o.length?o.map(l=>`<div class="card row"><div><b>${esc(l.n)}</b><small>${l.c} · salió a las ${fmtT(l.out)} · ${esc(l.p)}</small></div><div style="text-align:right"><div class="timer" data-out="${l.out}"></div><button class="btn" data-back="${l.id}">Ha vuelto</button></div></div>`).join(""):`<div class="empty">Nadie está fuera ahora mismo.</div>`);
+  setHTML($("#outList"),o.length?o.map(l=>`<div class="card row"><div><b class="lk" data-f="${esc(l.n).replace(/"/g,"&quot;")}">${esc(l.n)}</b><small>${l.c} · salió a las ${fmtT(l.out)} · ${esc(l.p)}</small></div><div style="text-align:right"><div class="timer" data-out="${l.out}"></div><button class="btn" data-back="${l.id}">Ha vuelto</button></div></div>`).join(""):`<div class="empty">Nadie está fuera ahora mismo.</div>`);
   tickOut();
 }
 function tickOut(){document.querySelectorAll("#outList .timer").forEach(t=>{const rem=Math.max(0,LIM*MIN-(now()-(+t.dataset.out))),s=Math.floor(rem/MIN)+":"+String(Math.floor(rem%MIN/1000)).padStart(2,"0");if(t.textContent!==s)t.textContent=s;t.classList.toggle("late",rem<=3*MIN)})}
-function bars(el,pairs,lim,skip){
+function bars(el,pairs,lim,skip,lk){
   const max=Math.max(1,...pairs.map(p=>p[1]));
-  $(el).innerHTML=pairs.length?pairs.map(([k,v])=>{const over=lim&&v>=lim&&!(skip&&skip[k]);return `<div class="bar ${over?"over":""}"><span>${esc(k)}</span><div class="track"><div class="fill ${over?"over":""}" style="width:${v/max*100}%"></div></div><span class="n">${v}</span></div>`}).join(""):`<div class="hint">Sin datos todavía.</div>`;
+  $(el).innerHTML=pairs.length?pairs.map(([k,v])=>{const over=lim&&v>=lim&&!(skip&&skip[k]);return `<div class="bar ${over?"over":""}"><span${lk?` class="lk" data-f="${esc(k).replace(/"/g,"&quot;")}"`:""}>${esc(k)}</span><div class="track"><div class="fill ${over?"over":""}" style="width:${v/max*100}%"></div></div><span class="n">${v}</span></div>`}).join(""):`<div class="hint">Sin datos todavía.</div>`;
 }
 let histLoaded=false,histRows=[],histTotal=0,histShown=50,histReq=0;
 const fmtDF=t=>new Date(t).toLocaleDateString("es-ES",{day:"2-digit",month:"2-digit",year:"numeric"});
@@ -467,7 +503,7 @@ async function loadHist(){
 function renderHist(){
   const n=histRows.length;
   $("#hInfo").textContent=histTotal?`${histTotal} salida${histTotal===1?"":"s"}`+(histTotal>n?` (se muestran las ${n} más recientes)`:""):"No hay salidas en ese periodo.";
-  $("#hRows").innerHTML=histRows.slice(0,histShown).map(l=>`<tr><td>${esc(l.n)}</td><td>${esc(l.c)}</td><td>${fmtDF(l.out)}</td><td>${fmtT(l.out)}</td><td>${l.m===null?"fuera":l.m}</td><td>${esc(l.p)}</td><td>${l.p===ME||ADM?`<button class="btn ghost sm" data-hdel="${l.id}">Eliminar</button>`:""}</td></tr>`).join("");
+  $("#hRows").innerHTML=histRows.slice(0,histShown).map(l=>`<tr><td><span class="lk" data-f="${esc(l.n).replace(/"/g,"&quot;")}">${esc(l.n)}</span></td><td>${esc(l.c)}</td><td>${fmtDF(l.out)}</td><td>${fmtT(l.out)}</td><td>${l.m===null?"fuera":l.m}</td><td>${esc(l.p)}</td><td>${l.p===ME||ADM?`<button class="btn ghost sm" data-hdel="${l.id}">Eliminar</button>`:""}</td></tr>`).join("");
   $("#hMore").hidden=histShown>=n;
 }
 $("#hQ").onclick=e=>{const q=e.target.dataset.q;if(q===undefined)return;
@@ -529,7 +565,7 @@ function renderSum(){
   $("#byCur").innerHTML=names.map(c=>{const [n,a]=SUM.cur[c],o=alc[c]||0;return `<tr><td>${esc(c)}</td><td>${n}</td><td>${a}</td><td>${(n/COURSES[c].length).toFixed(1)}</td>`+(w?`<td style="${o?"color:var(--warn);font-weight:700":""}">${o}</td>`:"")+"</tr>"}).join("")||`<tr><td colspan="${w?5:4}">Ningún curso tiene salidas en este periodo.</td></tr>`;
   const sc=$("#sc").value||"all",by={};stu.forEach(([n,c,k])=>by[n]=k);
   const pool=sc==="all"?stu.map(([n,c,k])=>[n,k]):(COURSES[sc]||[]).map(n=>[n,by[n]||0]);
-  bars("#byStu",pool.sort((a,b)=>b[1]-a[1]).slice(0,sc==="all"?10:99),lim,OBS);
+  bars("#byStu",pool.sort((a,b)=>b[1]-a[1]).slice(0,sc==="all"?10:99),lim,OBS,true);
   const dia=SUM.dia||{};let pairs=[];
   if(P.m==="w"){const a=new Date(range()[0]);for(let i=0;i<7;i++){const d=new Date(a);d.setDate(d.getDate()+i);pairs.push([DOW[d.getDay()].slice(0,3)+" "+d.getDate(),dia[ymd(d)]||0])}}
   else if(P.m==="t"){const wk={};Object.entries(dia).forEach(([k,v])=>{const m=ymd(monday(dayMs(k)));wk[m]=(wk[m]||0)+v});pairs=Object.entries(wk).sort().map(([k,v])=>["Sem. "+fmtD(dayMs(k)),v])}
@@ -557,6 +593,7 @@ function salida(n,c){
   toast("Salida registrada: "+n.split(",")[0],true);refresh();
 }
 $("#grid").onclick=e=>{
+  const fl=e.target.closest("[data-f]");if(fl)return abrirFicha(fl.dataset.f);
   const b=e.target.closest(".stu");if(!b)return;
   const n=b.dataset.n,c=b.dataset.c,hoy=log.filter(l=>l.n===n&&sameDay(l.out,now())).sort((a,b)=>a.out-b.out);
   if(!hoy.length)return salida(n,c);
@@ -568,6 +605,7 @@ $("#undo").onclick=()=>{
   after(id,()=>srv("deshacer",TOKEN,id)).then(()=>{pd.ack=Date.now()}).catch(()=>{pendDel.delete(id);toast("No se pudo deshacer");sync()});
 };
 $("#outList").onclick=e=>{
+  const fl=e.target.closest("[data-f]");if(fl)return abrirFicha(fl.dataset.f);
   const id=e.target.dataset.back;if(!id)return;
   const l=log.find(x=>x.id==id);if(!l)return;
   const pb={t:now(),ack:0};l.back=pb.t;pendBack.set(id,pb);refresh();
@@ -598,6 +636,7 @@ document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{
   if(b.dataset.t==="inc")$("#iT").value=nowHM();
   ["reg","out","inc","obs","adm","sum","his"].forEach(s=>$("#"+s).hidden=s!==b.dataset.t);refresh();
   if(b.dataset.t==="sum")loadSum();
+  if(b.dataset.t==="adm")cargarAdmProfes();
   if(b.dataset.t==="his"&&!histLoaded){histLoaded=true;$("#hQ").querySelector('[data-q="6"]').click()}
 });
 setInterval(()=>{const a=log.filter(l=>l.back===null).length;expire();if(log.filter(l=>l.back===null).length!==a)refresh();else if(!$("#out").hidden)tickOut()},1000);
@@ -617,7 +656,7 @@ const IC_OK='<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12"
 const NO_MSG={noexiste:["Usuario no registrado","Este usuario no está registrado.","Un profesor debe registrarlo."],repetido:["Código repetido","Este código está asignado a más de una persona.","Avisa a un profesor."],bloqueo:["Demasiados intentos","Has probado demasiados códigos.","Espera unos minutos y vuelve a intentarlo."]};
 function showRes(r){
   const ok=!!r.ok;let h;
-  if(ok)h=`${IC_OK}<h2>Registrado con éxito</h2><p class="rn">${esc(nom(r.n))}</p><p class="rc">${esc(r.c)}</p><div class="rs"><div><b>${r.hoy}</b><span>Salidas hoy</span></div><div><b>${r.sem}</b><span>Salidas esta semana</span></div></div><p class="rp">${r.prof?`Te ha dejado salir un profesor: <b>Sí</b> (${esc(nom(r.prof))})`:`Te ha dejado salir un profesor: <b>No</b>`}</p>`;
+  if(ok)h=`${IC_OK}<h2>Registrado con éxito</h2><p class="rn">${esc(nom(r.n))}</p><p class="rc">${esc(r.c)}</p><div class="rs"><div><b>${r.hoy}</b><span>Salidas hoy</span></div><div><b>${r.sem}</b><span>Salidas esta semana</span></div></div><p class="rp">${r.prof?`Te ha dejado salir un profesor: <b>Sí</b> (${esc(nom(r.prof))})`:`Te ha dejado salir un profesor: <b>No</b>`}</p>${r.cod?`<p class="rp">Tu código de baño: <b>${esc(r.cod)}</b> · ¡apréndetelo!</p>`:""}`;
   else{const m=NO_MSG[r.motivo]||NO_MSG.noexiste;h=`${IC_NO}<h2>${m[0]}</h2><p class="rm">${m[1]}</p><p class="rm"><b>${m[2]}</b></p>`}
   $("#resIn").innerHTML=h+'<p class="rt">Esta pantalla se cierra sola · toca para cerrar</p>';
   $("#res").className="res "+(ok?"ok":"no");$("#res").hidden=false;
@@ -649,7 +688,7 @@ function renderObs(){
   fillSel($("#oA"),(COURSES[c]||[]).map(n=>`<option>${esc(n)}</option>`).join(""));
   const q=$("#oQ").value.trim().toLowerCase();
   const list=obs.filter(o=>!q||o.n.toLowerCase().includes(q)||o.x.toLowerCase().includes(q)).sort((a,b)=>b.t-a.t);
-  setHTML($("#oList"),list.length?list.map(o=>`<div class="card"><div class="row"><div><b>${esc(o.n)}</b><small>${esc(o.c)} · ${fmtDF(o.t)} · ${esc(o.p)}</small></div>${o.p===ME||ADM?`<button class="btn ghost sm" data-odel="${o.id}">Eliminar</button>`:""}</div><p class="otxt">${esc(o.x)}</p></div>`).join(""):`<div class="empty">${obs.length?"Ninguna observación coincide con la búsqueda.":"No hay observaciones registradas."}</div>`);
+  setHTML($("#oList"),list.length?list.map(o=>`<div class="card"><div class="row"><div><b class="lk" data-f="${esc(o.n).replace(/"/g,"&quot;")}">${esc(o.n)}</b><small>${esc(o.c)} · ${fmtDF(o.t)} · ${esc(o.p)}</small></div>${o.p===ME||ADM?`<button class="btn ghost sm" data-odel="${o.id}">Eliminar</button>`:""}</div><p class="otxt">${esc(o.x)}</p></div>`).join(""):`<div class="empty">${obs.length?"Ninguna observación coincide con la búsqueda.":"No hay observaciones registradas."}</div>`);
 }
 $("#oC").onchange=renderObs;$("#oQ").oninput=renderObs;
 $("#oSave").onclick=()=>{
@@ -663,6 +702,7 @@ $("#oSave").onclick=()=>{
   po.p.catch(()=>{});toast("Observación guardada");refresh();
 };
 $("#oList").onclick=async e=>{
+  const fl=e.target.closest("[data-f]");if(fl)return abrirFicha(fl.dataset.f);
   const id=e.target.dataset.odel;if(!id)return;const o=obs.find(z=>z.id===id);if(!o)return;
   if(!await ask("Eliminar observación",`<p>¿Eliminar la observación de <b>${esc(o.n)}</b>?</p><p class="otxt">${esc(o.x)}</p><p>No se puede deshacer.</p>`,"Eliminar"))return;
   obs=obs.filter(z=>z!==o);rebuildObs();const pd={ack:0};pendDel.set(id,pd);refresh();
@@ -670,6 +710,7 @@ $("#oList").onclick=async e=>{
 };
 /* Eliminar del historial los registros introducidos por uno mismo (con confirmación) */
 $("#hRows").onclick=async e=>{
+  const fl=e.target.closest("[data-f]");if(fl)return abrirFicha(fl.dataset.f);
   const id=e.target.dataset.hdel;if(!id)return;const l=histRows.find(z=>z.id===id);if(!l)return;
   if(!await ask("Eliminar registro",`<p>¿Eliminar este registro del historial?</p><p><b>${esc(l.n)}</b> · ${esc(l.c)}<br>${fmtDF(l.out)} a las ${fmtT(l.out)}<br>Registrado por: ${esc(l.p)}</p><p>No se puede deshacer.</p>`,"Eliminar"))return;
   busy(true,"Eliminando…");
@@ -720,7 +761,8 @@ function parseCSV(t){
 const listaEj=a=>a&&a.length?`<ul class="ej">${a.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:"";
 function renderAdm(t,r,ap){
   const L=[["Nuevos",r.nuevos,r.ej.nuevos],["Actualizados",r.actualizados,r.ej.actualizados],["Se quitan",r.bajas,r.ej.bajas],["Sin cambios",r.sinCambios],["No se importan",r.omitidos,r.ej.omitidos]];
-  const hay=r.nuevos+r.actualizados+r.bajas>0;
+  if(r.dnis)L.splice(2,0,["DNI que se anotan",r.dnis]);
+  const hay=r.nuevos+r.actualizados+r.bajas+(r.dnis||0)>0;
   $(ADMX[t].v).innerHTML=`<p style="margin:12px 0 4px"><b>${ap?"✔ Cambios aplicados":"Vista previa · todavía no se ha cambiado nada"}</b></p><div class="scroll"><table class="admt"><tbody>${L.map(([a,n,e])=>`<tr><td>${a}</td><td><b>${n}</b>${listaEj(e)}</td></tr>`).join("")}</tbody></table></div>${(r.avisos||[]).map(x=>`<p class="avs">• ${esc(x)}</p>`).join("")}${ap?"":hay?`<button class="btn" type="button" data-adm-ap="${t}">Aplicar cambios</button>`:`<p class="hint">No hay cambios que aplicar.</p>`}`;
 }
 async function admEnviar(t,aplicar){
@@ -749,6 +791,107 @@ $("#adm").onclick=async e=>{
 };
 $("#fP").onchange=()=>{$("#vP").innerHTML="";delete PEND.prof};$("#fA").onchange=()=>{$("#vA").innerHTML="";delete PEND.alu};
 $("#admLnk").onclick=()=>{setAcc("admin");$("#k").focus()};
+/* Ficha del alumno: resumen completo de sus salidas (cualquier usuario con sesión) */
+const esA=s=>esc(String(s==null?"":s)).replace(/"/g,"&quot;");
+const DOWN=["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"];
+let fichaSeq=0;
+function fbars(pairs,lim){const max=Math.max(1,...pairs.map(p=>p[1]));
+  return pairs.length?pairs.map(([k,v])=>{const over=lim&&v>=lim;return `<div class="bar ${over?"over":""}"><span>${esc(k)}</span><div class="track"><div class="fill ${over?"over":""}" style="width:${v/max*100}%"></div></div><span class="n">${v}</span></div>`}).join(""):`<div class="hint">Sin datos.</div>`}
+function pintaFicha(f){
+  $("#fN").textContent=f.n;$("#fC").textContent=f.c||(f.existe?"":"Alumno que ya no figura en la lista");
+  const k=(v,t,al)=>`<div class="kpi${al?" al":""}"><b>${v}</b><span>${t}</span></div>`,M=f.max;
+  const tri=f.tri.map((v,i)=>v===null?"–":v).join(" · ");
+  let h=`<div class="fk">${k(f.hoy,"Hoy")}${k(f.sem,"Esta semana (máx. "+M+")",f.sem>=M)}${k(f.mes,"Este mes")}${k(f.cur,"Este curso")}</div>
+  <div class="fk">${k(f.tot,"Salidas registradas")}${k(f.dias,"Días distintos")}${k(f.media,"Minutos de media")}${k(f.semMax,"Semanas en el máximo",f.semMax>0)}</div>
+  <p class="hint">Por trimestre: <b>${tri}</b> · Las ha apuntado él o ella mismo/a: <b>${f.porAlu}</b>${f.nInc?` · Señalado/a en <b class="warnb">${f.nInc}</b> incidencia${f.nInc===1?"":"s"}`:""}</p>`;
+  if(f.obs.length)h+=`<h4 class="fs">Observaciones</h4>`+f.obs.map(o=>`<div class="card"><small class="hint">${fmtDF(o.t)} · ${esc(o.p)}</small><div>${esc(o.x)}</div></div>`).join("");
+  if(f.inc.length)h+=`<h4 class="fs">Incidencias en las que figura</h4>`+f.inc.map(i=>`<div class="card"><small class="hint">${fmtDF(i.t)} · ${esc(i.p)}</small>${i.note?`<div>${esc(i.note)}</div>`:""}</div>`).join("");
+  if(f.tot){
+    h+=`<h4 class="fs">Últimas 10 semanas</h4>`+fbars(f.ult.map(([w,v])=>["Sem. "+fmtD(w),v]),M);
+    const dw=f.dow.slice(0,f.dow[5]||f.dow[6]?7:5).map((v,i)=>[DOWN[i],v]);
+    h+=`<h4 class="fs">Por día de la semana</h4>`+fbars(dw);
+    h+=`<h4 class="fs">Por hora del día</h4>`+fbars(f.hor.map((v,i)=>[i+":00",v]).filter(p=>p[1]>0));
+    h+=`<h4 class="fs">Últimas salidas</h4><div class="scroll"><table class="fl"><thead><tr><th>Fecha</th><th>Salida</th><th>Min.</th><th>Registrada por</th></tr></thead><tbody>`
+      +f.lista.map(l=>`<tr><td>${fmtDF(l.out)}</td><td>${fmtT(l.out)}</td><td>${l.m===null?"fuera":l.m}</td><td>${l.p==="(alumnado)"?"El propio alumno":esc(l.p)}</td></tr>`).join("")+`</tbody></table></div>`;
+  }else h+=`<div class="empty">Todavía no tiene ninguna salida registrada.</div>`;
+  $("#fB").innerHTML=h;
+}
+async function abrirFicha(n){
+  if(!TOKEN||!n)return;const id=++fichaSeq;
+  $("#fN").textContent=n;$("#fC").textContent="";$("#fB").innerHTML='<p class="hint">Cargando…</p>';$("#ficha").hidden=false;
+  try{const f=await srvJT(30000,"getFicha",TOKEN,n);if(id!==fichaSeq)return;if(!f){$("#ficha").hidden=true;return logout()}pintaFicha(f)}
+  catch(e){if(id===fichaSeq)$("#fB").innerHTML='<p class="err">No se pudo cargar la ficha. Inténtalo de nuevo.</p>'}
+}
+$("#byStu").onclick=e=>{const fl=e.target.closest("[data-f]");if(fl)abrirFicha(fl.dataset.f)};
+$("#fX").onclick=()=>{$("#ficha").hidden=true;fichaSeq++};
+$("#ficha").onclick=e=>{if(e.target.id==="ficha"){$("#ficha").hidden=true;fichaSeq++}};
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("#ficha").hidden){$("#ficha").hidden=true;fichaSeq++}});
+
+/* Alumnado que no recuerda su código: busca su nombre y confirma que es él o ella */
+let qT=null,qSeq=0,RESL=[];
+$("#tBus").onclick=()=>{const o=$("#bus").hidden;$("#bus").hidden=!o;$("#tBus").setAttribute("aria-expanded",String(o));if(o)setTimeout(()=>{$("#q2").focus();try{$("#bus").scrollIntoView({block:"nearest"})}catch(e){}},30)};
+$("#q2").oninput=()=>{
+  clearTimeout(qT);const v=$("#q2").value.trim();
+  if(v.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s/g,"").length<3){qSeq++;RESL=[];$("#rl").innerHTML="";$("#rh").textContent=v?"Escribe al menos 3 letras.":"";return}
+  qT=setTimeout(async()=>{const my=++qSeq;
+    try{const r=await srvJT(15000,"buscarAlumno",v,CID);if(my!==qSeq)return;RESL=r.lista||[];
+      $("#rl").innerHTML=RESL.map((x,i)=>`<button type="button" class="stu" data-i="${i}"><span><b>${esc(nom(x.n))}</b><br><small>${esc(x.c)}${x.k?` · código <code class="cd">${esc(x.k)}</code>`:""}</small></span></button>`).join("");
+      $("#rh").textContent=r.bloqueo?"Demasiadas búsquedas. Espera unos minutos.":!RESL.length?"No hay coincidencias. Prueba con otro apellido.":r.mas?"Hay más resultados: escribe más letras para afinar.":"Toca tu nombre para apuntar tu salida."}
+    catch(err){if(my===qSeq)$("#rh").textContent="No se pudo buscar. Inténtalo de nuevo."}},300)};
+$("#rl").onclick=async e=>{
+  const b=e.target.closest("button[data-i]");if(!b||aBusy)return;const x=RESL[+b.dataset.i];if(!x)return;
+  if(!await ask("Confirma que eres tú",`<p style="font-size:18px;margin:4px 0"><b>${esc(nom(x.n))}</b><br><small>${esc(x.c)}${x.k?` · código <code class="cd">${esc(x.k)}</code>`:""}</small></p><p>Se apuntará tu salida ahora mismo.</p>`,"Sí, soy yo"))return;
+  if(aBusy)return;aBusy=true;resetViewport();busy(true,"Registrando salida…");
+  try{const r=await srvJT(30000,"registrarPorNombre",x.n,x.c,CID);$("#q2").value="";RESL=[];$("#rl").innerHTML="";$("#rh").textContent="";$("#bus").hidden=true;$("#tBus").setAttribute("aria-expanded","false");showRes(r||{ok:false,motivo:"noexiste"})}
+  catch(err){$("#rh").textContent="No se pudo registrar. Inténtalo de nuevo"}
+  finally{aBusy=false;busy(false)}
+};
+
+/* Administración: restablecer la contraseña de un profesor a su DNI */
+let ADMP=[],admPLoad=0;
+function pintaProfes(){
+  const q=normC($("#rQ").value),L=ADMP.filter(p=>!q||normC(p.n+" "+p.u).includes(q)),s=$("#rS"),cur=s.value;
+  s.innerHTML=L.map(p=>`<option value="${esA(p.u)}">${esc(p.n)} (${esc(p.u)})${p.dni?"":" · sin DNI"}</option>`).join("");
+  if(L.some(p=>p.u===cur))s.value=cur;infoProf()}
+function infoProf(){const p=ADMP.find(x=>x.u===$("#rS").value);
+  $("#rGo").disabled=!p||!p.dni;
+  $("#rI").textContent=!p?(ADMP.length?"Elige a la persona en la lista.":"Todavía no hay profesorado: importa el fichero de Séneca."):p.dni?"Su contraseña volverá a ser su DNI/Pasaporte.":"No consta su DNI/Pasaporte: importa el fichero de profesorado de Séneca para registrarlo."}
+async function cargarAdmProfes(){
+  if(!ADM)return;const id=++admPLoad;
+  try{const r=await srvJT(30000,"adminProfesores",TOKEN);if(id!==admPLoad)return;if(!r)return logout();ADMP=r;pintaProfes()}
+  catch(e){$("#rI").textContent="No se pudo cargar la lista de profesorado."}}
+$("#rQ").oninput=pintaProfes;$("#rS").onchange=infoProf;
+$("#rGo").onclick=async()=>{const p=ADMP.find(x=>x.u===$("#rS").value);if(!p)return;$("#vR").innerHTML="";
+  if(!await ask("Restablecer contraseña",`<p>La contraseña de <b>${esc(p.n)}</b> volverá a ser su <b>DNI/Pasaporte</b>.</p><p>Si estaba bloqueada por intentos fallidos, se desbloquea.</p>`,"Restablecer"))return;
+  busy(true,"Restableciendo…");
+  try{const r=await srvJT(30000,"adminRestablecerClave",TOKEN,p.u);if(!r){logout();return}
+    $("#vR").innerHTML=`<p class="avs">✔ Contraseña de ${esc(r.n)} restablecida a su DNI/Pasaporte.</p>`;toast("Contraseña restablecida")}
+  catch(e){$("#vR").innerHTML=`<p class="err">${esc((e&&e.message)||"No se pudo restablecer. Inténtalo de nuevo")}</p>`}
+  finally{busy(false)}};
+
+/* Administración: borrar el historial anterior a una fecha (vista previa + confirmación escribiendo BORRAR) */
+$("#xD").max=ymd(Date.now());
+$("#xD").onchange=$("#xO").onchange=()=>{$("#vX").innerHTML=""};
+$("#xRev").onclick=async()=>{const f=$("#xD").value,box=$("#vX");box.innerHTML="";
+  if(!f){box.innerHTML='<p class="err">Elige primero la fecha</p>';return}
+  busy(true,"Calculando…");
+  try{const r=await srvJT(60000,"adminBorrarAntes",TOKEN,f,false,$("#xO").checked);if(!r){logout();return}
+    const d=fmtDF(dayMs(f)),tot=r.salidas+r.incidencias+r.observaciones;
+    if(!tot){box.innerHTML=`<p class="hint">No hay nada anterior al ${d}.</p>`;return}
+    box.innerHTML=`<p style="margin:12px 0 4px"><b>Se borrarían, antes del ${d}:</b></p><ul class="ej" style="color:var(--text);font-size:15px"><li><b>${r.salidas}</b> salida${r.salidas===1?"":"s"} (quedarían ${r.quedan})</li><li><b>${r.incidencias}</b> incidencia${r.incidencias===1?"":"s"}</li>${$("#xO").checked?`<li><b>${r.observaciones}</b> observaci${r.observaciones===1?"ón":"ones"}</li>`:""}</ul>
+    <label style="display:block;font-size:14px;color:var(--muted);margin:10px 0 4px" for="xC">Para confirmar, escribe BORRAR</label><input type="text" id="xC" autocomplete="off" autocapitalize="characters" spellcheck="false" style="max-width:200px">
+    <div class="acts" style="justify-content:flex-start"><button class="btn dng" type="button" id="xAp" disabled>Borrar definitivamente</button></div>`;
+    $("#xC").oninput=()=>{$("#xAp").disabled=$("#xC").value.trim().toUpperCase()!=="BORRAR"};
+    $("#xAp").onclick=()=>borrarAntes(f)}
+  catch(e){box.innerHTML=`<p class="err">${esc((e&&e.message)||"No se pudo calcular. Inténtalo de nuevo")}</p>`}
+  finally{busy(false)}};
+async function borrarAntes(f){
+  busy(true,"Borrando historial…");
+  try{const r=await srvJT(120000,"adminBorrarAntes",TOKEN,f,true,$("#xO").checked);if(!r){logout();return}
+    histLoaded=false;histRows=[];histTotal=0;await sync();
+    $("#vX").innerHTML=`<p class="avs">✔ Borrado: ${r.salidas} salida${r.salidas===1?"":"s"}, ${r.incidencias} incidencia${r.incidencias===1?"":"s"}${$("#xO").checked?` y ${r.observaciones} observaci${r.observaciones===1?"ón":"ones"}`:""}.</p>`;toast("Historial anterior borrado")}
+  catch(e){$("#vX").innerHTML=`<p class="err">${esc((e&&e.message)||"No se pudo borrar. Inténtalo de nuevo")}</p>`}
+  finally{busy(false)}}
 /* Logo del centro (el admin puede cambiarlo) */
 const LOGO_DEF="https:\x2F\x2Fiescampanillas.com\x2Fwp-content\x2Fuploads\x2F2025\x2F04\x2Fic-logo-335x263.jpg";
 let LOGO_CUR="";
